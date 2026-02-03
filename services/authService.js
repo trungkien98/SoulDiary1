@@ -2,11 +2,6 @@
 const User = require("../models/userModel");
 const tokenService = require("./tokenService");
 
-/**
- * Helper: cookie options chuẩn cho both web/mobile
- * - dev: Lax + secure false
- * - prod: None + secure true (bắt buộc để cookie hoạt động cross-site)
- */
 const buildCookieOptions = () => {
   const days = Number(process.env.JWT_COOKIE_EXPIRES_IN || 30);
 
@@ -51,9 +46,7 @@ exports.getUserInfo = async (userId) => {
   return User.findById(userId);
 };
 
-// ====== Token flow (giữ nguyên logic) ======
 exports.signToken = (user) => {
-  // giữ nguyên output {access_token, refresh_token}
   return tokenService.signTokens(user);
 };
 
@@ -63,9 +56,7 @@ exports.signToken = (user) => {
  * - lưu refreshToken vào DB
  * - set refreshToken cookie (web)
  * - trả JSON
- *
- * NOTE: Nếu mobile muốn nhận refresh_token trong body thì client dùng luôn response.token.refresh_token.
- * Với web, cookie cũng được set đồng thời.
+
  */
 exports.createSendToken = async (user, statusCode, res) => {
   const token = exports.signToken(user);
