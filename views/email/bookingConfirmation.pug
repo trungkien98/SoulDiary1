@@ -1,0 +1,124 @@
+extends baseEmail
+
+block content
+    h1 Đặt vé thành công! 🎬
+
+    p Chào #{firstName},
+
+    p Cảm ơn bạn đã tin tưởng và sử dụng dịch vụ của SkyFlow Cinema. Vé xem phim của bạn đã được đặt thành công!
+
+    .booking-details
+        h2 🎫 Thông tin vé xem phim
+
+        table.booking-info(role='presentation', border='0', cellpadding='0', cellspacing='0')
+            tbody
+                tr
+                    td.label Mã đặt vé:
+                    td.value #{emailContent.bookingCode}
+                tr
+                    td.label Tên phim:
+                    td.value #{emailContent.movieTitle}
+                tr
+                    td.label Rạp chiếu:
+                    td.value #{emailContent.cinemaName}
+                tr
+                    td.label Địa chỉ:
+                    td.value #{emailContent.cinemaAddress}
+                tr
+                    td.label Phòng chiếu:
+                    td.value #{emailContent.roomNumber}
+                tr
+                    td.label Suất chiếu:
+                    td.value #{new Date(emailContent.startTime).toLocaleString('vi-VN')} - #{new Date(emailContent.endTime).toLocaleString('vi-VN')}
+                tr
+                    td.label Ghế ngồi:
+                    td.value #{emailContent.seatNumbers}
+                tr
+                    td.label Số lượng vé:
+                    td.value #{emailContent.ticketQuantity} vé
+                tr
+                    td.label Tổng tiền:
+                    td.value.price #{emailContent.totalAmount}
+
+            if emailContent.foods && emailContent.foods.length > 0
+                .food-details
+                    h2 🍿 Thông tin đồ ăn & thức uống
+
+                    table.food-info(role='presentation', border='0', cellpadding='0', cellspacing='0')
+                        tbody
+                            each food in emailContent.foods
+                                tr
+                                    td.label #{food.name}:
+                                    td.value #{food.quantity}x #{food.price.toLocaleString('vi-VN')} VNĐ = #{food.total.toLocaleString('vi-VN')} VNĐ
+                            tr.total-row
+                                td.label.strong Tổng tiền đồ ăn:
+                                td.value.strong #{emailContent.totalFoodAmount}
+
+        .movie-poster
+        if emailContent.moviePoster
+            img(src=emailContent.moviePoster, alt=emailContent.movieTitle, style='max-width: 200px; height: auto; border-radius: 8px;')
+
+    .important-info
+        h2 ⚠️ Lưu ý quan trọng
+        ul
+            li Vui lòng có mặt tại rạp trước giờ chiếu ít nhất 15 phút
+            li Mang theo mã QR hoặc mã đặt vé #{emailContent.bookingCode} để đổi vé
+                li Đồ ăn & thức uống sẽ được giao tại quầy rạp khi bạn đến xem phim
+            li Vui lòng mang theo mã QR hoặc mã đặt vé #{emailContent.bookingCode} để nhận đồ ăn
+            li Không được mang đồ ăn, thức uống từ bên ngoài vào rạp
+            li Tắt điện thoại hoặc chuyển sang chế độ im lặng trong suốt buổi chiếu
+            li Vé đã mua không được hoàn trả hoặc đổi lịch chiếu
+
+    .qr-code
+        if emailContent.qrCode
+            h2 📱 Mã QR vé điện tử
+            p Quét mã QR này tại rạp để nhận vé:
+            img(src=emailContent.qrCode, alt='QR Code', style='max-width: 150px; height: auto; margin: 10px 0;')
+
+    .actions
+        table.btn.btn-primary(role='presentation', border='0', cellpadding='0', cellspacing='0')
+            tbody
+                tr
+                    td(align='center')
+                        table(role='presentation', border='0', cellpadding='0', cellspacing='0')
+                            tbody
+                                tr
+                                    td
+                                        a(href=emailContent.downloadTicketUrl) Tải vé về máy
+
+        p
+            | Bạn cũng có thể
+            a(href='#{emailContent.manageBookingUrl}') quản lý đặt vé
+            |  hoặc
+            a(href='#{emailContent.viewMovieInfoUrl}') xem thông tin phim
+            |  chi tiết.
+
+    .cinema-info
+        h2 🏢 Thông tin rạp chiếu
+        p
+            strong #{emailContent.cinemaName}
+            br
+            | 📍 #{emailContent.cinemaAddress}
+            br
+            | 🕒 Giờ mở cửa: #{emailContent.openingHours}
+
+    .contact-info
+        h2 📞 Hỗ trợ khách hàng
+        p
+            | Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ:
+            br
+            | 📧 Email:
+            a(href='mailto:support@skyflow.com') support@skyflow.com
+            br
+            | 📱 Hotline:
+            a(href='tel:+84123456789') 0123 456 789
+            br
+            | 🕒 Phục vụ 24/7
+
+    .thank-you
+        p
+            strong Cảm ơn bạn đã chọn SkyFlow Cinema!
+            | Chúc bạn có những phút giây giải trí tuyệt vời! 🍿
+
+        p
+            em Đội ngũ SkyFlow Cinema

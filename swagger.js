@@ -1,13 +1,8 @@
 const swaggerJsdoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
 
-let url = "http://localhost:3000";
-let description = "Development server";
-
-if (process.env.NODE_ENV !== "development") {
-  url = process.env.CLIENT_HOST;
-  description = "Production server";
-}
+// 👇 Dùng env RIÊNG cho Swagger
+const swaggerUrl = process.env.SWAGGER_SERVER_URL || "http://localhost:3000";
 
 const swaggerDefinition = {
   openapi: "3.0.0",
@@ -19,8 +14,8 @@ const swaggerDefinition = {
   },
   servers: [
     {
-      url: url,
-      description: description,
+      url: swaggerUrl,
+      description: "API Server",
     },
   ],
   components: {
@@ -28,7 +23,7 @@ const swaggerDefinition = {
       bearer: {
         type: "http",
         scheme: "bearer",
-        bearerFormat: "JWT", // optional, just for UI display
+        bearerFormat: "JWT",
       },
     },
   },

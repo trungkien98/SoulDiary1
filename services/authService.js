@@ -50,33 +50,28 @@ exports.signToken = (user) => {
   return tokenService.signTokens(user);
 };
 
-/**
- * createSendToken: giữ nguyên hành vi
- * - sign access+refresh
- * - lưu refreshToken vào DB
- * - set refreshToken cookie (web)
- * - trả JSON
-
- */
 exports.createSendToken = async (user, statusCode, res) => {
   const token = exports.signToken(user);
 
-  // Lưu refresh token vào database
-  await User.findByIdAndUpdate(
-    user._id,
-    { refreshToken: token.refresh_token },
-    { new: true },
-  );
+  // lưu refreshToken để rotate/revoke
+  await User.findByIdAndUpdate(user._id, { refreshToken: token.refresh_token });
 
-  // Set cookie cho web
-  res.cookie("refreshToken", token.refresh_token, buildCookieOptions());
+  const shouldSetCookie =
+    String(process.env.COOKIE_AUTH || "false").toLowerCase() === "true";
+  if (shouldSetCookie) {
+    res.cookie("refreshToken", token.refresh_token, buildCookieOptions());
+  }
 
-  // tránh trả password
-  user.password = undefined;
+  // trả user sạch (tránh lộ field nhạy cảm)
+  const safeUser = user.toObject ? user.toObject() : { ...user };
+  delete safeUser.password;
+  delete safeUser.refreshToken;
+  delete safeUser.googleId;
+  delete safeUser.facebookId;
 
   return res.status(statusCode).json({
     status: "success",
     token,
-    data: { user },
+    data: { user: safeUser },
   });
 };
