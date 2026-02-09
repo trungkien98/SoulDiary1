@@ -1,0 +1,753 @@
+style.
+    /* SkyFlow Cinema Email Template - Premium Design */
+
+    /* Reset & Base Styles */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+    }
+
+    /* Container */
+    .email-container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: #fff;
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        position: relative;
+    }
+
+    .email-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #ff6b6b, #ffd93d, #6bcf7f, #4ecdc4, #45b7d1);
+        animation: gradientMove 3s ease-in-out infinite;
+    }
+
+    @keyframes gradientMove {
+        0%, 100% {
+            background-position: 0% 50%;
+        }
+        50% {
+            background-position: 100% 50%;
+        }
+    }
+
+    /* Header */
+    h1 {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        text-align: center;
+        padding: 30px 20px;
+        font-size: 28px;
+        font-weight: 700;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        position: relative;
+        overflow: hidden;
+    }
+
+    h1::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+        animation: shimmer 3s infinite;
+    }
+
+    @keyframes shimmer {
+        0% {
+            transform: translateX(-100%) translateY(-100%) rotate(45deg);
+        }
+        100% {
+            transform: translateX(100%) translateY(100%) rotate(45deg);
+        }
+    }
+
+    /* Content Padding */
+    .email-content {
+        padding: 30px;
+    }
+
+    /* Paragraphs */
+    p {
+        margin-bottom: 16px;
+        font-size: 16px;
+        line-height: 1.7;
+    }
+
+    /* Section Headers */
+    h2 {
+        color: #2c3e50;
+        font-size: 20px;
+        font-weight: 600;
+        margin: 25px 0 15px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #e74c3c;
+        position: relative;
+        display: inline-block;
+    }
+
+    h2::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        width: 50px;
+        height: 2px;
+        background: linear-gradient(90deg, #e74c3c, #f39c12);
+        animation: expand 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes expand {
+        0% {
+            width: 30px;
+        }
+        100% {
+            width: 60px;
+        }
+    }
+
+    /* Booking Details Section */
+    .booking-details {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 15px;
+        padding: 25px;
+        margin: 20px 0;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        border: 1px solid #e9ecef;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .booking-details::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+    }
+
+    /* Tables */
+    .booking-info,
+    .food-info {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 15px 0;
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .booking-info tr,
+    .food-info tr {
+        transition: all 0.3s ease;
+    }
+
+    .booking-info tr:hover,
+    .food-info tr:hover {
+        background: #f8f9fa;
+        transform: translateX(5px);
+    }
+
+    .booking-info td,
+    .food-info td {
+        padding: 15px;
+        border-bottom: 1px solid #e9ecef;
+        vertical-align: top;
+    }
+
+    .booking-info tr:last-child td,
+    .food-info tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* Labels and Values */
+    .label {
+        font-weight: 600;
+        color: #495057;
+        width: 40%;
+        position: relative;
+    }
+
+    .label::after {
+        content: ':';
+        margin-left: 5px;
+    }
+
+    .value {
+        color: #2c3e50;
+        font-weight: 500;
+    }
+
+    .value.price {
+        color: #e74c3c;
+        font-weight: 700;
+        font-size: 18px;
+    }
+
+    .total-row {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        font-weight: 700;
+    }
+
+    /* Food Details */
+    .food-details {
+        margin-top: 20px;
+        padding: 20px;
+        background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
+        border-radius: 10px;
+        border-left: 4px solid #e74c3c;
+    }
+
+    /* Movie Poster */
+    .movie-poster {
+        text-align: center;
+        margin: 20px 0;
+    }
+
+    .movie-poster img {
+        max-width: 200px;
+        height: auto;
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        transition: transform 0.3s ease;
+    }
+
+    .movie-poster img:hover {
+        transform: scale(1.05) rotate(1deg);
+    }
+
+    /* Important Info */
+    .important-info {
+        background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+        border-radius: 15px;
+        padding: 25px;
+        margin: 25px 0;
+        border-left: 5px solid #f39c12;
+        position: relative;
+    }
+
+    .important-info::before {
+        content: '⚠️';
+        position: absolute;
+        top: -10px;
+        left: 20px;
+        background: #f39c12;
+        color: white;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+    }
+
+    .important-info ul {
+        margin: 15px 0;
+        padding-left: 20px;
+    }
+
+    .important-info li {
+        margin: 10px 0;
+        padding: 8px 0;
+        position: relative;
+        padding-left: 10px;
+    }
+
+    .important-info li::before {
+        content: '▶';
+        position: absolute;
+        left: -10px;
+        color: #f39c12;
+        font-weight: bold;
+    }
+
+    /* QR Code Section */
+    .qr-code {
+        text-align: center;
+        background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+        border-radius: 15px;
+        padding: 25px;
+        margin: 25px 0;
+        border: 2px dashed #4caf50;
+    }
+
+    .qr-code img {
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        transition: transform 0.3s ease;
+    }
+
+    .qr-code img:hover {
+        transform: scale(1.1);
+    }
+
+    /* Action Buttons */
+    .actions {
+        text-align: center;
+        margin: 30px 0;
+    }
+
+    .btn {
+        display: inline-block;
+        margin: 10px;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 50px;
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        transition: all 0.3s ease;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .btn-primary::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.6s ease;
+    }
+
+    .btn-primary:hover::before {
+        left: 100%;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 30px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-primary a {
+        color: white;
+        text-decoration: none;
+        padding: 15px 30px;
+        font-weight: 600;
+        display: block;
+        position: relative;
+        z-index: 2;
+    }
+
+    /* Links */
+    a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.3s ease;
+    }
+
+    a:hover {
+        color: #764ba2;
+        text-decoration: underline;
+    }
+
+    /* Info Sections */
+    .cinema-info,
+    .contact-info {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 15px;
+        padding: 25px;
+        margin: 25px 0;
+        border-left: 4px solid #17a2b8;
+        position: relative;
+    }
+
+    .cinema-info::before,
+    .contact-info::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: linear-gradient(90deg, #17a2b8, #20c997);
+    }
+
+    /* Thank You Section */
+    .thank-you {
+        text-align: center;
+        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        border-radius: 15px;
+        padding: 30px;
+        margin: 30px 0;
+        border: 2px solid #28a745;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .thank-you::before {
+        content: '🎬';
+        position: absolute;
+        top: -20px;
+        right: -20px;
+        font-size: 60px;
+        opacity: 0.1;
+        transform: rotate(15deg);
+    }
+
+    .thank-you strong {
+        color: #155724;
+        font-size: 18px;
+    }
+
+    .thank-you em {
+        color: #6c757d;
+        font-style: normal;
+        font-weight: 500;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 640px) {
+        body {
+            padding: 10px;
+        }
+
+        .email-container {
+            border-radius: 10px;
+        }
+
+        .email-content {
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 24px;
+            padding: 20px;
+        }
+
+        .booking-info,
+        .food-info {
+            font-size: 14px;
+        }
+
+        .booking-info td,
+        .food-info td {
+            padding: 10px;
+        }
+
+        .label {
+            width: 45%;
+        }
+
+        .btn-primary a {
+            padding: 12px 25px;
+        }
+    }
+
+    /* Print Styles */
+    @media print {
+        body {
+            background: white;
+            padding: 0;
+        }
+
+        .email-container {
+            box-shadow: none;
+            border: 1px solid #ddd;
+        }
+
+        .booking-details,
+        .important-info,
+        .cinema-info,
+        .contact-info,
+        .thank-you {
+            background: white !important;
+            box-shadow: none;
+            border: 1px solid #ddd;
+        }
+    }
+
+    /* Animation for loading */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .email-container {
+        animation: fadeInUp 0.8s ease-out;
+    }
+
+    /* Hover effects for interactive elements */
+    .booking-details:hover,
+    .food-details:hover,
+    .important-info:hover,
+    .cinema-info:hover,
+    .contact-info:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+        transition: all 0.3s ease;
+    }
+
+    /* Gradient text effects */
+    .value.price {
+        background: linear-gradient(135deg, #e74c3c 0%, #f39c12 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-weight: 800;
+    }
+
+    /* Success indicators */
+    .total-row .strong {
+        color: #28a745;
+        font-weight: 700;
+    }
+
+    /* Cinema branding */
+    .cinema-info strong {
+        color: #667eea;
+        font-size: 18px;
+    }
+
+    /* Contact emphasis */
+    .contact-info a {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-weight: 600;
+    }
+
+    /* CSS EMAIL OTP */
+    /*.email-container {*/
+    /*    max-width: 600px !important;*/
+    /*    margin: 0 auto !important;*/
+    /*    background-color: #ffffff !important;*/
+    /*    border-radius: 12px !important;*/
+    /*    overflow: hidden !important;*/
+    /*    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;*/
+    /*    border: 1px solid #e5e7eb !important;*/
+    /*    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;*/
+    /*}*/
+
+    .email-header {
+        background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%) !important;
+        color: white !important;
+        padding: 32px 24px !important;
+        text-align: center !important;
+    }
+
+    .email-header h1 {
+        font-size: 28px !important;
+        font-weight: 700 !important;
+        margin: 0 0 8px 0 !important;
+        letter-spacing: -0.025em !important;
+        color: white !important;
+    }
+
+    .email-header .subtitle {
+        font-size: 14px !important;
+        color: #bfdbfe !important;
+        font-weight: 400 !important;
+        margin: 0 !important;
+    }
+
+    .email-content {
+        padding: 32px 24px !important;
+    }
+
+    .greeting {
+        font-size: 16px !important;
+        font-weight: 600 !important;
+        color: #1f2937 !important;
+        margin: 0 0 4px 0 !important;
+    }
+
+    .welcome-text {
+        font-size: 14px !important;
+        color: #6b7280 !important;
+        margin: 0 0 24px 0 !important;
+    }
+
+    .description-box {
+        background-color: #f9fafb !important;
+        border-radius: 8px !important;
+        padding: 20px !important;
+        margin: 0 0 32px 0 !important;
+        border-left: 4px solid #3b82f6 !important;
+    }
+
+    .description-box p {
+        font-size: 14px !important;
+        color: #374151 !important;
+        line-height: 1.7 !important;
+        margin: 0 !important;
+    }
+
+    .otp-section {
+        text-align: center !important;
+        margin: 32px 0 !important;
+    }
+
+    .otp-label {
+        font-size: 14px !important;
+        color: #6b7280 !important;
+        margin: 0 0 12px 0 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.05em !important;
+        font-weight: 500 !important;
+    }
+
+    .otp-container {
+        background: linear-gradient(135deg, #eff6ff 0%, #f3e8ff 100%) !important;
+        border: 2px dashed #3b82f6 !important;
+        border-radius: 12px !important;
+        padding: 24px !important;
+        margin: 16px auto !important;
+        display: inline-block !important;
+        min-width: 200px !important;
+    }
+
+    .otp-code {
+        font-size: 32px !important;
+        font-weight: 700 !important;
+        color: #2563eb !important;
+        letter-spacing: 0.2em !important;
+        font-family: "Courier New", monospace !important;
+        margin: 0 !important;
+    }
+
+    .warning-section {
+        background-color: #fefce8 !important;
+        border-left: 4px solid #eab308 !important;
+        border-radius: 8px !important;
+        padding: 20px !important;
+        margin: 24px 0 !important;
+    }
+
+    .warning-section p {
+        font-size: 14px !important;
+        color: #92400e !important;
+        line-height: 1.7 !important;
+        margin: 0 !important;
+    }
+
+    .warning-section strong {
+        font-weight: 600 !important;
+        color: #78350f !important;
+    }
+
+    .email-content p {
+        font-size: 14px !important;
+        color: #374151 !important;
+        line-height: 1.7 !important;
+        margin: 0 0 16px 0 !important;
+    }
+
+    .email-footer {
+        background-color: #f9fafb !important;
+        padding: 24px !important;
+        text-align: center !important;
+        border-top: 1px solid #e5e7eb !important;
+    }
+
+    .signature {
+        font-size: 14px !important;
+        color: #6b7280 !important;
+        margin: 0 0 16px 0 !important;
+    }
+
+    .signature strong {
+        color: #2563eb !important;
+        font-weight: 600 !important;
+    }
+
+    .SendContactMail-email-container {
+        max-width: 600px !important;
+        margin: 0 auto !important;
+        background-color: #ffffff !important;
+        border-radius: 12px !important;
+        overflow: hidden !important;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+        border: 1px solid #e5e7eb !important;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+    }
+
+    .SendContactMail-email-content {
+        padding: 32px 24px !important;
+    }
+
+    .SendContactMail-greeting {
+        font-size: 16px !important;
+        font-weight: 600 !important;
+        color: #1f2937 !important;
+        margin: 0 0 4px 0 !important;
+    }
+
+    .SendContactMail-welcome-text {
+        font-size: 14px !important;
+        color: #6b7280 !important;
+        margin: 0 0 24px 0 !important;
+    }
+
+    .SendContactMail-description {
+        font-size: 14px !important;
+        color: #374151 !important;
+        line-height: 1.7 !important;
+        margin: 0 0 16px 0 !important;
+    }
+
+    .SendContactMail-contact-info-box {
+        background-color: #f9fafb !important;
+        border-radius: 8px !important;
+        padding: 20px !important;
+        margin: 0 0 32px 0 !important;
+        border-left: 4px solid #3b82f6 !important;
+    }
+
+    .SendContactMail-contact-info-box ul {
+        list-style: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .SendContactMail-contact-info-box li {
+        font-size: 14px !important;
+        color: #374151 !important;
+        line-height: 1.7 !important;
+        margin: 8px 0 !important;
+    }
+
+    .SendContactMail-contact-info-box li strong {
+        font-weight: 600 !important;
+        color: #1f2937 !important;
+    }
+
+    .SendContactMail-email-content p {
+        font-size: 14px !important;
+        color: #374151 !important;
+        line-height: 1.7 !important;
+        margin: 0 0 16px 0 !important;
+    }

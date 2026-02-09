@@ -1,0 +1,23 @@
+extends baseEmail
+
+block content
+    div.SendContactMail-email-container
+        div.SendContactMail-email-content
+            p.SendContactMail-greeting Xin chào #{firstName},
+            p.SendContactMail-welcome-text Chào mừng bạn đến với SkyFlow
+            p.SendContactMail-description Chúng tôi đã nhận được tin nhắn của bạn với các thông tin sau:
+            div.SendContactMail-contact-info-box
+                ul
+                    li
+                        strong Tên:
+                        | #{emailContent.name}
+                    li
+                        strong Email:
+                        | #{emailContent.email}
+                    li
+                        strong Số điện thoại:
+                        | #{emailContent.phone}
+                    li
+                        strong Tin nhắn:
+                        | #{emailContent.message}
+            p Chúng tôi sẽ liên hệ lại với bạn sớm nhất có thể.

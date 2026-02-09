@@ -1,12 +1,13 @@
 // controller/authController.js
 const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
-
+const otpService = require("../services/otpService");
 const authService = require("../services/authService");
 const tokenService = require("../services/tokenService");
 const socialService = require("../services/socialService");
-const User = require("../models/userModel");
 
+const User = require("../models/userModel");
+const Email = require("../utils/sendEmail");
 // ====== LOCAL: REGISTER ======
 exports.register = catchAsync(async (req, res, next) => {
   const { email, password, name } = req.body;
@@ -16,11 +17,27 @@ exports.register = catchAsync(async (req, res, next) => {
   }
 
   const existed = await authService.findUser(email);
-  if (existed) return next(new AppError("Email đã tồn tại", 409));
+  if (existed) {
+    return next(new AppError("Email đã tồn tại", 409));
+  }
+  const user = await User.create({
+    email,
+    password,
+    name,
+  });
 
-  const user = await User.create({ email, password, name });
+  const otp = await otpService.generateOTP("register", user._id);
 
-  await authService.createSendToken(user, 201, res);
+  await new Email(user, otp).sendWelcome();
+
+  res.status(201).json({
+    status: "success",
+    message:
+      "Đăng ký thành công. Vui lòng kiểm tra email để xác thực tài khoản.",
+    data: {
+      email: user.email,
+    },
+  });
 });
 
 // ====== LOCAL: LOGIN ======
@@ -35,6 +52,9 @@ exports.login = catchAsync(async (req, res, next) => {
   if (!user || !user.password) {
     return next(new AppError("Sai email hoặc mật khẩu", 401));
   }
+  if (!user.isVerified) {
+    return next(new AppError("Tài khoản chưa được xác thực", 401));
+  }
 
   const ok = await user.correctPassword(password, user.password);
   if (!ok) return next(new AppError("Sai email hoặc mật khẩu", 401));
@@ -43,7 +63,6 @@ exports.login = catchAsync(async (req, res, next) => {
 });
 
 // ====== GOOGLE LOGIN ======
-// client gửi { idToken }
 exports.googleLogin = catchAsync(async (req, res, next) => {
   const { idToken } = req.body;
   if (!idToken) return next(new AppError("Thiếu idToken", 400));
@@ -77,6 +96,7 @@ exports.googleLogin = catchAsync(async (req, res, next) => {
       googleId,
       password: null,
       isUpdatePassword: false,
+      isVerified: true,
     });
   }
 
@@ -84,7 +104,6 @@ exports.googleLogin = catchAsync(async (req, res, next) => {
 });
 
 // ====== FACEBOOK LOGIN ======
-// client gửi { accessToken }
 exports.facebookLogin = catchAsync(async (req, res, next) => {
   const { accessToken } = req.body;
   if (!accessToken) return next(new AppError("Thiếu accessToken", 400));
@@ -127,6 +146,7 @@ exports.facebookLogin = catchAsync(async (req, res, next) => {
       facebookId,
       password: null,
       isUpdatePassword: false,
+      isVerified: true,
     });
   }
 
@@ -134,10 +154,8 @@ exports.facebookLogin = catchAsync(async (req, res, next) => {
 });
 
 // ====== REFRESH TOKEN ======
-// web: lấy từ cookie refreshToken
-// mobile: gửi refreshToken trong body
 exports.refresh = catchAsync(async (req, res, next) => {
-  const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
+  const refreshToken = req.body?.refreshToken || req.cookies?.refreshToken;
 
   if (!refreshToken) return next(new AppError("Thiếu refreshToken", 400));
 
@@ -169,20 +187,25 @@ exports.refresh = catchAsync(async (req, res, next) => {
 
 // ====== LOGOUT ======
 exports.logout = catchAsync(async (req, res) => {
-  // clear cookie
+  // clear cookie (nếu có bật cookie)
   res.clearCookie("refreshToken", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
   });
 
-  // nếu bạn muốn revoke refreshToken trong DB luôn (nên làm):
-  // (chỉ làm được nếu client gửi refreshToken hoặc bạn decode cookie)
-  const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
+  // mobile-first: ưu tiên body
+  const refreshToken = req.body?.refreshToken || req.cookies?.refreshToken;
+
   if (refreshToken) {
     try {
       const decoded = tokenService.verifyRefreshToken(refreshToken);
-      await User.findByIdAndUpdate(decoded.id, { refreshToken: null });
+      const user = await User.findById(decoded.id).select("+refreshToken");
+
+      // ✅ chỉ revoke nếu token khớp DB
+      if (user && user.refreshToken === refreshToken) {
+        await User.findByIdAndUpdate(decoded.id, { refreshToken: null });
+      }
     } catch (_) {}
   }
 

@@ -1,0 +1,30 @@
+extends baseEmail
+
+block content
+    .email-content
+        p.greeting Xin chào #{firstName},
+        p.welcome-text Chào mừng bạn đến với SkyFlow
+
+        .description-box
+            p #{subject}
+
+        p Bạn vừa yêu cầu đặt lại mật khẩu từ SkyFlow. Vui lòng nhấn vào liên kết bên dưới để tiếp tục quá trình đặt lại mật khẩu.
+
+        .reset-section
+            .reset-label Liên kết đặt lại mật khẩu
+            .reset-container
+                .reset-button
+                    a(href=emailContent target="_blank" style="color: #ffffff; text-decoration: none; padding: 12px 24px; background-color: #007bff; border-radius: 5px; display: inline-block; font-weight: bold;") Đặt lại mật khẩu
+
+        .warning-section
+            p
+                strong Lưu ý:
+                | Liên kết này có hiệu lực trong vòng 10 phút. Vui lòng không chia sẻ liên kết này với bất kỳ ai vì lý do bảo mật.
+
+        p Nếu bạn không thực hiện yêu cầu này, vui lòng bỏ qua email này hoặc liên hệ với bộ phận hỗ trợ khách hàng của chúng tôi.
+
+    .email-footer
+        .signature
+            | Trân trọng,
+            br
+            strong Đội ngũ SkyFlow
