@@ -14,6 +14,7 @@ const whiteList = (process.env.FE_ADMIN_CLIENT_HOST || "")
   .filter(Boolean);
 
 whiteList.push(
+  "https://souldiary1.onrender.com",
   "http://localhost:8081",
   "http://localhost:5173",
   "http://localhost:4200",
