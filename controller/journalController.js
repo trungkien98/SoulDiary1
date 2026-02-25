@@ -2,6 +2,8 @@ const mongoose = require("mongoose");
 const Journal = require("../models/journalModel");
 const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
+const User = require("../models/userModel");
+const { applyStreakByDate } = require("../utils/streak");
 const { buildPagination, buildJournalFilter } = require("../utils/apiFeature");
 const isValidId = (id) => mongoose.Types.ObjectId.isValid(id);
 
@@ -19,9 +21,25 @@ exports.createJournal = catchAsync(async (req, res, next) => {
     entryDate,
   });
 
-  res.status(201).json({ status: "success", data: { journal } });
-});
+  const user = await User.findById(req.user._id);
+  console.log("before:", user.streakCount, user.lastStreakDate);
+  applyStreakByDate(user, new Date());
+  console.log("after:", user.streakCount, user.lastStreakDate);
 
+  await user.save();
+
+  res.status(201).json({
+    status: "success",
+    data: {
+      journal,
+      streak: {
+        streakCount: user.streakCount,
+        bestStreak: user.bestStreak,
+        lastStreakDate: user.lastStreakDate,
+      },
+    },
+  });
+});
 exports.getMyJournals = catchAsync(async (req, res) => {
   const { page, limit, skip } = buildPagination(req.query, {
     defaultLimit: 10,

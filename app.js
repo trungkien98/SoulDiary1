@@ -8,6 +8,7 @@ const journalRouter = require("./routes/journalRouter");
 const globalErrorController = require("./controller/errorController");
 const mailTestRoutes = require("./routes/mailTestRouter");
 const otpRouter = require("./routes/otpRouter");
+const userRouter = require("./routes/userRouter");
 const whiteList = (process.env.FE_ADMIN_CLIENT_HOST || "")
   .split(",")
   .map((s) => s.trim())
@@ -46,6 +47,7 @@ app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/journals", journalRouter);
 app.use("/api/v1/mail", mailTestRoutes);
 app.use("/api/v1/otp", otpRouter);
+app.use("/api/v1/users", userRouter);
 app.use((req, res) => {
   res.status(404).send("Not Found");
 });

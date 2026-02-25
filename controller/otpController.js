@@ -5,14 +5,18 @@ const otpService = require("../services/otpService");
 // const resetPasswordService = require("../services/resetPasswordService");
 const Email = require("../utils/sendEmail");
 const userService = require("../services/authService");
+const crypto = require("crypto");
 
+const generateRandomPassword = (length = 12) => {
+  return crypto.randomBytes(32).toString("base64url").slice(0, length);
+};
 exports.verifyOTP = catchAsync(async (req, res, next) => {
   const { email, code, type } = req.body;
   if (!email || !code || !type) {
     return next(new AppError("Vui lòng nhập đầy đủ thông tin", 400));
   }
 
-  const user = await userService.findUser(email);
+  const user = await userService.findUser(email, "+password");
 
   if (!user) {
     return next(new AppError("Người dùng không tồn tại", 404));
@@ -25,16 +29,29 @@ exports.verifyOTP = catchAsync(async (req, res, next) => {
   }
 
   switch (type) {
-    case "forgotPassword":
-      const token = await resetPasswordService.generateToken(user._id);
+    case "forgotPassword": {
+      if (!user.isVerified) {
+        return next(new AppError("Người dùng chưa xác thực", 400));
+      }
+
+      const newPasswordPlain = generateRandomPassword(12);
+
+      // 2) cập nhật password (pre-save sẽ hash)
+      user.password = newPasswordPlain;
+      user.isUpdatePassword = true;
+      await user.save(); // quan trọng: dùng save để chạy pre('save') hash password
+
+      // 3) clear OTP để không dùng lại
+      await otpService.clearOTP(type, user._id);
+
+      // 4) gửi mail mật khẩu mới
+      await new Email(user, newPasswordPlain).sendNewPassword();
+
       return res.status(200).json({
         status: "success",
-        message: "Xác thực thành công",
-        data: {
-          token,
-          email,
-        },
+        message: "Mật khẩu mới đã được gửi về email.",
       });
+    }
     case "register":
       await userService.updateOne(user._id, { isVerified: true });
       return res.status(200).json({
