@@ -211,3 +211,27 @@ exports.logout = catchAsync(async (req, res) => {
 
   res.status(200).json({ status: "success" });
 });
+exports.forgotPassword = catchAsync(async (req, res, next) => {
+  const { email } = req.body;
+  if (!email) return next(new AppError("Vui lòng nhập email", 400));
+
+  const user = await authService.findUser(email);
+  if (!user) return next(new AppError("Người dùng không tồn tại", 404));
+
+  if (!user.isVerified)
+    return next(new AppError("Người dùng chưa xác thực", 400));
+
+  let otp;
+  try {
+    otp = await otpService.generateOTP("forgotPassword", user._id);
+    await new Email(user, otp).sendPasswordReset(); // gửi OTP
+  } catch (e) {
+    await otpService.clearOTP("forgotPassword", user._id);
+    return next(new AppError("Lỗi khi gửi mã OTP", 500));
+  }
+
+  res.status(200).json({
+    status: "success",
+    message: "OTP đặt lại mật khẩu đã được gửi về email.",
+  });
+});

@@ -3,7 +3,7 @@ const otpController = require("../controller/otpController");
 const router = express.Router();
 
 /**
- * @swagger
+ * @openapi
  * /api/v1/otp/verify:
  *   post:
  *     tags:
@@ -42,7 +42,7 @@ const router = express.Router();
 router.post("/verify", otpController.verifyOTP);
 
 /**
- * @swagger
+ * @openapi
  * /api/v1/otp/resend:
  *   post:
  *     tags:

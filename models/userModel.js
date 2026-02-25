@@ -15,6 +15,9 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       validate: [validator.isEmail, "Email không hợp lệ"],
     },
+    streakCount: { type: Number, default: 0 },
+    bestStreak: { type: Number, default: 0 },
+    lastStreakDate: { type: Date, default: null },
     photo: {
       type: String,
       default: null,

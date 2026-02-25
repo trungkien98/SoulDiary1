@@ -7,7 +7,7 @@ module.exports = class Email {
     this.to = user.email;
     this.firstName = user.name;
     this.emailContent = emailContent;
-    this.from = `SkyFlow <${process.env.EMAIL_FROM}>`;
+    this.from = `SoulDiary <${process.env.EMAIL_FROM}>`;
   }
 
   newTransport() {
@@ -74,6 +74,12 @@ module.exports = class Email {
 
   async sendContactMail() {
     await this.send("sendContactMail", "Gửi mail thành công");
+  }
+  async sendNewPassword() {
+    await this.send(
+      "newPassword", // tên file pug: views/email/newPassword.pug
+      "Mật khẩu mới của bạn - SoulDiary",
+    );
   }
 };
 
