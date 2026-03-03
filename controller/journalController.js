@@ -9,7 +9,7 @@ const isValidId = (id) => mongoose.Types.ObjectId.isValid(id);
 
 // POST /api/v1/journals
 exports.createJournal = catchAsync(async (req, res, next) => {
-  const { title, content, mood, tags, entryDate } = req.body;
+  const { title, content, mood, tags, entryDate, isPublic } = req.body;
   if (!content) return next(new AppError("Thiếu content", 400));
 
   const journal = await Journal.create({
@@ -19,12 +19,15 @@ exports.createJournal = catchAsync(async (req, res, next) => {
     mood,
     tags,
     entryDate,
+    isPublic: typeof isPublic === "boolean" ? isPublic : false,
   });
 
-  const user = await User.findById(req.user._id);
-  console.log("before:", user.streakCount, user.lastStreakDate);
+  const user = await User.findById(req.user._id).select(
+    "streakCount bestStreak lastStreakDate",
+  );
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()); // normalize day
   applyStreakByDate(user, new Date());
-  console.log("after:", user.streakCount, user.lastStreakDate);
 
   await user.save();
 
@@ -114,4 +117,23 @@ exports.deleteJournal = catchAsync(async (req, res, next) => {
 
   if (!journal) return next(new AppError("Không tìm thấy nhật ký để xóa", 404));
   res.status(204).json({ status: "success", data: null });
+});
+
+exports.updateJournalVisibility = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+  if (!isValidId(id)) return next(new AppError("id không hợp lệ", 400));
+
+  if (typeof req.body.isPublic !== "boolean") {
+    return next(new AppError("isPublic phải là boolean", 400));
+  }
+
+  const journal = await Journal.findOneAndUpdate(
+    { _id: id, user: req.user._id, isDeleted: false },
+    { isPublic: req.body.isPublic },
+    { new: true, runValidators: true },
+  );
+
+  if (!journal) return next(new AppError("Không tìm thấy nhật ký", 404));
+
+  res.json({ status: "success", data: { journal } });
 });

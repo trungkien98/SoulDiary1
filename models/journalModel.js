@@ -29,7 +29,9 @@ const journalSchema = new mongoose.Schema(
 
     isDeleted: { type: Boolean, default: false, index: true },
     deletedAt: { type: Date },
+    isPublic: { type: Boolean, default: false, index: true },
   },
+
   { timestamps: true },
 );
 

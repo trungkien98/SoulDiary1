@@ -203,4 +203,32 @@ router.get("/me", protect, userController.getMeProfile);
  *                   example: User không tồn tại
  */
 router.patch("/updateMyPassword", protect, userController.updateMyPassword);
+/**
+ * @openapi
+ * /api/v1/users/me:
+ *   patch:
+ *     summary: Update my profile
+ *     tags: [Users]
+ *     security:
+ *       - bearer: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name: { type: string, example: "Nguyen Van A" }
+ *               phone: { type: string, example: "0987654321" }
+ *               dateOfBirth: { type: string, format: date-time, example: "2000-01-01T00:00:00.000Z" }
+ *               address: { type: string, example: "HCMC" }
+ *               photo: { type: string, nullable: true, example: null }
+ *               bio: { type: string, nullable: true, example: "Mình thích viết nhật ký mỗi ngày." }
+ *     responses:
+ *       200:
+ *         description: Success
+ *       401:
+ *         description: Unauthorized
+ */
+router.patch("/me", protect, userController.updateMeProfile);
 module.exports = router;
