@@ -8,6 +8,12 @@ const userSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    bio: {
+      type: String,
+      trim: true,
+      default: null,
+      maxlength: [300, "Tiểu sử tối đa 300 ký tự"],
+    },
     email: {
       type: String,
       required: [true],
@@ -15,6 +21,7 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       validate: [validator.isEmail, "Email không hợp lệ"],
     },
+
     streakCount: { type: Number, default: 0 },
     bestStreak: { type: Number, default: 0 },
     lastStreakDate: { type: Date, default: null },
@@ -78,6 +85,7 @@ const userSchema = new mongoose.Schema(
       enum: ["active", "inactive"],
       default: "active",
     },
+    isDeleted: { type: Boolean, default: false, index: true },
   },
   { timestamps: true },
 );

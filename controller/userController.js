@@ -27,7 +27,6 @@ exports.updateMyPassword = catchAsync(async (req, res, next) => {
     return next(new AppError("confirmPassword không khớp", 400));
   }
 
-  // password đang select:false => phải +password
   const user = await User.findById(req.user._id).select("+password");
 
   if (!user) return next(new AppError("User không tồn tại", 404));
@@ -57,5 +56,42 @@ exports.updateMyPassword = catchAsync(async (req, res, next) => {
     status: "success",
     message: "Đổi mật khẩu thành công",
     token: { access_token },
+  });
+});
+exports.updateMeProfile = catchAsync(async (req, res, next) => {
+  const allowed = ["name", "phone", "dateOfBirth", "address", "photo", "bio"];
+  const update = {};
+
+  for (const key of allowed) {
+    if (req.body[key] !== undefined) update[key] = req.body[key];
+  }
+
+  if (req.body.email !== undefined) {
+    return next(new AppError("Không thể đổi email tại đây", 400));
+  }
+  if (req.body.password !== undefined || req.body.newPassword !== undefined) {
+    return next(new AppError("Không thể đổi mật khẩu tại đây", 400));
+  }
+
+  if (update.dateOfBirth !== undefined) {
+    const d = new Date(update.dateOfBirth);
+    if (Number.isNaN(d.getTime())) {
+      return next(new AppError("dateOfBirth không hợp lệ", 400));
+    }
+    update.dateOfBirth = d;
+  }
+
+  const user = await User.findByIdAndUpdate(req.user._id, update, {
+    new: true,
+    runValidators: true,
+  }).select(
+    "name email photo phone dateOfBirth address bio isVerified status createdAt updatedAt streakCount bestStreak lastStreakDate",
+  );
+
+  if (!user) return next(new AppError("User không tồn tại", 404));
+
+  res.status(200).json({
+    status: "success",
+    data: { user },
   });
 });
