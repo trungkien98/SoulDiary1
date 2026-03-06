@@ -8,14 +8,14 @@ const router = express.Router();
  * @openapi
  * tags:
  *   - name: Auth
- *     description: Authentication APIs
+ *     description: Authentication APIs (Register, Login, OAuth) | Các API xác thực (Đăng ký, Đăng nhập, OAuth)
  */
 
 /**
  * @openapi
  * /api/v1/auth/register:
  *   post:
- *     summary: Register (email/password)
+ *     summary: Register with Email & Password | Đăng ký bằng Email & Mật khẩu
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -23,20 +23,63 @@ const router = express.Router();
  *         application/json:
  *           schema:
  *             type: object
- *             required: [email, password]
+ *             required: [email, password, name]
  *             properties:
  *               name:
  *                 type: string
- *                 example: Soul Diary
+ *                 description: User's full name
+ *                 example: Nguyen Van A
  *               email:
  *                 type: string
- *                 example: test@example.com
+ *                 format: email
+ *                 description: User's email address
+ *                 example: user@example.com
  *               password:
  *                 type: string
- *                 example: 12345678
+ *                 format: password
+ *                 description: Password (minimum 8 characters)
+ *                 minLength: 8
+ *                 example: MySecurePassword123!
  *     responses:
  *       201:
- *         description: Created
+ *         description: Registration successful - Verification email sent
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: Đăng ký thành công. Vui lòng kiểm tra email để xác thực tài khoản.
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     email:
+ *                       type: string
+ *                       example: user@example.com
+ *       400:
+ *         description: Missing email or password
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             example:
+ *               status: error
+ *               message: Thiếu email hoặc password
+ *               statusCode: 400
+ *       409:
+ *         description: Email already exists
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             example:
+ *               status: error
+ *               message: Email đã tồn tại
+ *               statusCode: 409
  */
 router.post("/register", authController.register);
 
@@ -44,7 +87,7 @@ router.post("/register", authController.register);
  * @openapi
  * /api/v1/auth/login:
  *   post:
- *     summary: Login (email/password)
+ *     summary: Login with Email & Password | Đăng nhập bằng Email & Mật khẩu
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -56,13 +99,35 @@ router.post("/register", authController.register);
  *             properties:
  *               email:
  *                 type: string
- *                 example: test@example.com
+ *                 format: email
+ *                 example: user@example.com
  *               password:
  *                 type: string
- *                 example: 12345678
+ *                 format: password
+ *                 example: MySecurePassword123!
  *     responses:
  *       200:
- *         description: OK
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/TokenResponse'
+ *       400:
+ *         description: Missing email or password
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: Invalid credentials or account not verified
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             example:
+ *               status: error
+ *               message: Sai email hoặc mật khẩu
+ *               statusCode: 401
  */
 router.post("/login", authController.login);
 
@@ -70,7 +135,7 @@ router.post("/login", authController.login);
  * @openapi
  * /api/v1/auth/google:
  *   post:
- *     summary: Login with Google (client sends idToken)
+ *     summary: Login with Google (OAuth) | Đăng nhập với Google
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -82,10 +147,21 @@ router.post("/login", authController.login);
  *             properties:
  *               idToken:
  *                 type: string
- *                 description: Google ID Token from client
+ *                 description: Google ID Token from client (from google-auth-library)
+ *                 example: eyJhbGciOiJSUzI1NiIsImtpZCI6IjEifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhdWQiOiJjbGllbnRfaWQuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwicGljdHVyZSI6Imh0dHBzOi8vZXhhbXBsZS5jb20vcGhvdG8uanBnIn0.sig
  *     responses:
  *       200:
- *         description: OK
+ *         description: Google login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/TokenResponse'
+ *       400:
+ *         description: Missing idToken
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post("/google", authController.googleLogin);
 
@@ -93,7 +169,7 @@ router.post("/google", authController.googleLogin);
  * @openapi
  * /api/v1/auth/facebook:
  *   post:
- *     summary: Login with Facebook (client sends accessToken)
+ *     summary: Login with Facebook (OAuth) | Đăng nhập với Facebook
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -105,63 +181,95 @@ router.post("/google", authController.googleLogin);
  *             properties:
  *               accessToken:
  *                 type: string
- *                 description: Facebook Access Token from client
+ *                 description: Facebook access token from client
+ *                 example: EAASDFASDFASDFASDFASDFASDFASDFASDFASDFASDF
  *     responses:
  *       200:
- *         description: OK
+ *         description: Facebook login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/TokenResponse'
+ *       400:
+ *         description: Missing accessToken
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post("/facebook", authController.facebookLogin);
 
 /**
  * @openapi
+ * /api/v1/auth/logout:
+ *   post:
+ *     summary: Logout user | Đăng xuất
+ *     tags: [Auth]
+ *     security:
+ *       - bearer: []
+ *     responses:
+ *       200:
+ *         description: Logout successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: Logged out successfully
+ *       401:
+ *         description: Unauthorized - No token provided
+ */
+router.post("/logout", authController.logout);
+
+/**
+ * @openapi
  * /api/v1/auth/refresh:
  *   post:
- *     summary: Refresh access token (web uses cookie refreshToken, mobile can send body.refreshToken)
+ *     summary: Refresh access token | Làm mới token
  *     tags: [Auth]
  *     requestBody:
- *       required: false
+ *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
+ *             required: [refreshToken]
  *             properties:
  *               refreshToken:
  *                 type: string
- *                 description: Only needed for mobile if not using cookie
+ *                 description: Refresh token from login response
+ *                 example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY1ZDBmM2I1YTVhNWE1YTVhNWE1YTVhNSIsImlhdCI6MTcwODM5OTUyOH0.abc
  *     responses:
  *       200:
- *         description: OK
+ *         description: New access token generated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 token:
+ *                   type: object
+ *                   properties:
+ *                     access_token:
+ *                       type: string
  *       401:
- *         description: Invalid refresh token
+ *         description: Invalid or expired refresh token
  */
 router.post("/refresh", authController.refresh);
 
 /**
  * @openapi
- * /api/v1/auth/logout:
- *   post:
- *     summary: Logout (clear refresh cookie, optionally revoke refresh in DB)
- *     tags: [Auth]
- *     requestBody:
- *       required: false
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               refreshToken:
- *                 type: string
- *                 description: Optional for mobile to revoke refresh token
- *     responses:
- *       200:
- *         description: OK
- */
-router.post("/logout", authController.logout);
-/**
- * @openapi
  * /api/v1/auth/forgot-password:
  *   post:
- *     summary: Forgot password - send OTP to email
+ *     summary: Request password reset (sends OTP to email) | Quên mật khẩu
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -173,16 +281,25 @@ router.post("/logout", authController.logout);
  *             properties:
  *               email:
  *                 type: string
- *                 example: test@example.com
+ *                 format: email
+ *                 example: user@example.com
  *     responses:
  *       200:
- *         description: OTP sent to email
- *       400:
- *         description: Bad request
+ *         description: Reset OTP sent to email
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: OTP sent to your email
  *       404:
  *         description: User not found
- *       500:
- *         description: Server error
  */
 router.post("/forgot-password", authController.forgotPassword);
+
 module.exports = router;

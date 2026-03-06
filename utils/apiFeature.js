@@ -25,7 +25,12 @@ exports.buildJournalFilter = (query = {}, userId) => {
   const filter = { user: userId, isDeleted: false };
 
   if (mood) filter.mood = mood;
-  if (tag) filter.tags = tag;
+  
+  // Use $in operator for array filtering
+  if (tag) {
+    const tagLower = tag.toLowerCase();
+    filter.tags = { $regex: tagLower, $options: "i" };
+  }
 
   if (from || to) {
     filter.entryDate = {};
