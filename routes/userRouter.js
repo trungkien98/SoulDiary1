@@ -8,20 +8,21 @@ const router = express.Router();
  * @openapi
  * tags:
  *   - name: Users
- *     description: User profile APIs
+ *     description: 👤 User profile management (requires authentication) | Quản lý hồ sơ người dùng
  */
 
 /**
  * @openapi
  * /api/v1/users/me:
  *   get:
- *     summary: Get my profile
+ *     summary: Get my profile | Xem hồ sơ của tôi
+ *     description: Retrieve authenticated user's profile information | Lấy thông tin hồ sơ của bạn
  *     tags: [Users]
  *     security:
  *       - bearer: []
  *     responses:
  *       200:
- *         description: Success
+ *         description: Profile retrieved successfully
  *         content:
  *           application/json:
  *             schema:
@@ -34,94 +35,36 @@ const router = express.Router();
  *                   type: object
  *                   properties:
  *                     user:
- *                       type: object
- *                       properties:
- *                         _id:
- *                           type: string
- *                           example: 65d0f3b5a5a5a5a5a5a5a5a5
- *                         name:
- *                           type: string
- *                           example: Nguyen Van A
- *                         email:
- *                           type: string
- *                           example: a@example.com
- *                         photo:
- *                           type: string
- *                           nullable: true
- *                           example: null
- *                         phone:
- *                           type: string
- *                           nullable: true
- *                           example: "0987654321"
- *                         dateOfBirth:
- *                           type: string
- *                           format: date-time
- *                           nullable: true
- *                           example: "2000-01-01T00:00:00.000Z"
- *                         address:
- *                           type: string
- *                           nullable: true
- *                           example: "HCMC"
- *                         isVerified:
- *                           type: boolean
- *                           example: true
- *                         status:
- *                           type: string
- *                           enum: [active, inactive]
- *                           example: active
- *                         streakCount:
- *                           type: integer
- *                           example: 3
- *                         bestStreak:
- *                           type: integer
- *                           example: 10
- *                         lastStreakDate:
- *                           type: string
- *                           format: date-time
- *                           nullable: true
- *                           example: "2026-02-25T00:00:00.000Z"
- *                         createdAt:
- *                           type: string
- *                           format: date-time
- *                           example: "2026-02-01T10:00:00.000Z"
- *                         updatedAt:
- *                           type: string
- *                           format: date-time
- *                           example: "2026-02-25T12:00:00.000Z"
+ *                       $ref: '#/components/schemas/User'
  *       401:
- *         description: Unauthorized (missing/invalid token)
+ *         description: Unauthorized - Token missing or invalid
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: fail
- *                 message:
- *                   type: string
- *                   example: Bạn chưa đăng nhập
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             example:
+ *               status: fail
+ *               message: Bạn chưa đăng nhập
+ *               statusCode: 401
  *       404:
  *         description: User not found
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: fail
- *                 message:
- *                   type: string
- *                   example: User không tồn tại
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             example:
+ *               status: fail
+ *               message: User không tồn tại
+ *               statusCode: 404
  */
-
 router.get("/me", protect, userController.getMeProfile);
+
 /**
  * @openapi
  * /api/v1/users/updateMyPassword:
  *   patch:
- *     summary: Update my password
+ *     summary: Update password | Đổi mật khẩu
+ *     description: Change user password with current password verification | Cập nhật mật khẩu
  *     tags: [Users]
  *     security:
  *       - bearer: []
@@ -135,16 +78,23 @@ router.get("/me", protect, userController.getMeProfile);
  *             properties:
  *               currentPassword:
  *                 type: string
- *                 example: oldPass123
+ *                 format: password
+ *                 description: User's current password
+ *                 example: OldPassword123!
  *               newPassword:
  *                 type: string
- *                 example: newPass123
+ *                 format: password
+ *                 description: New password (minimum 8 characters)
+ *                 minLength: 8
+ *                 example: NewPassword456!
  *               confirmPassword:
  *                 type: string
- *                 example: newPass123
+ *                 format: password
+ *                 description: Confirm new password
+ *                 example: NewPassword456!
  *     responses:
  *       200:
- *         description: Success
+ *         description: Password changed successfully
  *         content:
  *           application/json:
  *             schema:
@@ -161,53 +111,51 @@ router.get("/me", protect, userController.getMeProfile);
  *                   properties:
  *                     access_token:
  *                       type: string
- *                       example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *                       description: New access token after password change
+ *                       example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY1ZDBmM2I1YTVhNWE1YTVhNWE1YTVhNSIsImlhdCI6MTcwODM5OTUyOH0.xyz
  *       400:
- *         description: Bad Request (missing fields / confirm not match / social account has no password)
+ *         description: Bad Request - Missing fields or password mismatch
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: fail
- *                 message:
- *                   type: string
- *                   example: confirmPassword không khớp
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               missingFields:
+ *                 value:
+ *                   status: fail
+ *                   message: Vui lòng nhập currentPassword và newPassword
+ *                   statusCode: 400
+ *               passwordMismatch:
+ *                 value:
+ *                   status: fail
+ *                   message: confirmPassword không khớp
+ *                   statusCode: 400
+ *               socialAccount:
+ *                 value:
+ *                   status: fail
+ *                   message: Tài khoản Google/Facebook chưa có mật khẩu. Hãy tạo mật khẩu trước.
+ *                   statusCode: 400
  *       401:
- *         description: Unauthorized (invalid token / current password wrong)
+ *         description: Unauthorized - Current password incorrect
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: fail
- *                 message:
- *                   type: string
- *                   example: Mật khẩu hiện tại không đúng
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             example:
+ *               status: fail
+ *               message: Mật khẩu hiện tại không đúng
+ *               statusCode: 401
  *       404:
  *         description: User not found
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: fail
- *                 message:
- *                   type: string
- *                   example: User không tồn tại
  */
 router.patch("/updateMyPassword", protect, userController.updateMyPassword);
+
 /**
  * @openapi
  * /api/v1/users/me:
  *   patch:
- *     summary: Update my profile
+ *     summary: Update profile | Cập nhật hồ sơ
+ *     description: Update user profile information (name, phone, date of birth, address, bio, photo) | Cập nhật thông tin hồ sơ
  *     tags: [Users]
  *     security:
  *       - bearer: []
@@ -218,17 +166,76 @@ router.patch("/updateMyPassword", protect, userController.updateMyPassword);
  *           schema:
  *             type: object
  *             properties:
- *               name: { type: string, example: "Nguyen Van A" }
- *               phone: { type: string, example: "0987654321" }
- *               dateOfBirth: { type: string, format: date-time, example: "2000-01-01T00:00:00.000Z" }
- *               address: { type: string, example: "HCMC" }
- *               photo: { type: string, nullable: true, example: null }
- *               bio: { type: string, nullable: true, example: "Mình thích viết nhật ký mỗi ngày." }
+ *               name:
+ *                 type: string
+ *                 description: Full name
+ *                 example: Nguyen Van A
+ *               phone:
+ *                 type: string
+ *                 description: Phone number
+ *                 example: "0987654321"
+ *               dateOfBirth:
+ *                 type: string
+ *                 format: date-time
+ *                 description: Date of birth
+ *                 example: "1990-01-15T00:00:00.000Z"
+ *               address:
+ *                 type: string
+ *                 description: User's address
+ *                 example: Ho Chi Minh City, Vietnam
+ *               photo:
+ *                 type: string
+ *                 nullable: true
+ *                 description: URL to user's profile photo
+ *                 example: https://example.com/photo.jpg
+ *               bio:
+ *                 type: string
+ *                 nullable: true
+ *                 description: Short bio about the user
+ *                 example: I love journaling and self-reflection
  *     responses:
  *       200:
- *         description: Success
+ *         description: Profile updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     user:
+ *                       $ref: '#/components/schemas/User'
+ *       400:
+ *         description: Bad Request - Invalid update fields
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               emailChange:
+ *                 value:
+ *                   status: fail
+ *                   message: Không thể đổi email tại đây
+ *                   statusCode: 400
+ *               passwordChange:
+ *                 value:
+ *                   status: fail
+ *                   message: Không thể đổi mật khẩu tại đây
+ *                   statusCode: 400
+ *               invalidDate:
+ *                 value:
+ *                   status: fail
+ *                   message: dateOfBirth không hợp lệ
+ *                   statusCode: 400
  *       401:
- *         description: Unauthorized
+ *         description: Unauthorized - Token missing or invalid
+ *       404:
+ *         description: User not found
  */
 router.patch("/me", protect, userController.updateMeProfile);
+
 module.exports = router;

@@ -22,6 +22,9 @@ exports.createJournal = catchAsync(async (req, res, next) => {
     isPublic: typeof isPublic === "boolean" ? isPublic : false,
   });
 
+  // Populate user info
+  await journal.populate("user", "name email");
+
   const user = await User.findById(req.user._id).select(
     "streakCount bestStreak lastStreakDate",
   );
@@ -52,7 +55,11 @@ exports.getMyJournals = catchAsync(async (req, res) => {
   const filter = buildJournalFilter(req.query, req.user._id);
 
   const [journals, total] = await Promise.all([
-    Journal.find(filter).sort({ entryDate: -1 }).skip(skip).limit(limit),
+    Journal.find(filter)
+      .populate("user", "name email")
+      .sort({ entryDate: -1 })
+      .skip(skip)
+      .limit(limit),
     Journal.countDocuments(filter),
   ]);
 
@@ -76,7 +83,7 @@ exports.getJournal = catchAsync(async (req, res, next) => {
     _id: id,
     user: req.user._id,
     isDeleted: false,
-  });
+  }).populate("user", "name email");
 
   if (!journal) return next(new AppError("Không tìm thấy nhật ký", 404));
   res.json({ status: "success", data: { journal } });
@@ -97,7 +104,7 @@ exports.updateJournal = catchAsync(async (req, res, next) => {
     { _id: id, user: req.user._id, isDeleted: false },
     update,
     { new: true, runValidators: true },
-  );
+  ).populate("user", "name email");
 
   if (!journal)
     return next(new AppError("Không tìm thấy nhật ký để cập nhật", 404));
@@ -107,16 +114,34 @@ exports.updateJournal = catchAsync(async (req, res, next) => {
 // DELETE /api/v1/journals/:id (soft delete)
 exports.deleteJournal = catchAsync(async (req, res, next) => {
   const { id } = req.params;
-  if (!isValidId(id)) return next(new AppError("id không hợp lệ", 400));
+  const userId = req.user._id;
+
+  if (!isValidId(id)) {
+    return next(new AppError("id không hợp lệ", 400));
+  }
 
   const journal = await Journal.findOneAndUpdate(
-    { _id: id, user: req.user._id, isDeleted: false },
+    { _id: id, user: userId, isDeleted: false },
     { isDeleted: true, deletedAt: new Date() },
     { new: true },
-  );
+  ).populate("user", "name email");
 
-  if (!journal) return next(new AppError("Không tìm thấy nhật ký để xóa", 404));
-  res.status(204).json({ status: "success", data: null });
+  if (!journal) {
+    return next(new AppError("Không tìm thấy nhật ký để xóa", 404));
+  }
+
+  res.status(200).json({
+    status: "success",
+    message: "Journal deleted successfully",
+    data: {
+      journal: {
+        _id: journal._id,
+        title: journal.title || "No title",
+        deletedAt: journal.deletedAt,
+        isDeleted: journal.isDeleted,
+      },
+    },
+  });
 });
 
 exports.updateJournalVisibility = catchAsync(async (req, res, next) => {
@@ -131,9 +156,42 @@ exports.updateJournalVisibility = catchAsync(async (req, res, next) => {
     { _id: id, user: req.user._id, isDeleted: false },
     { isPublic: req.body.isPublic },
     { new: true, runValidators: true },
-  );
+  ).populate("user", "name email");
 
   if (!journal) return next(new AppError("Không tìm thấy nhật ký", 404));
 
   res.json({ status: "success", data: { journal } });
+});
+
+exports.restoreJournal = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+  const userId = req.user._id;
+
+  if (!isValidId(id)) {
+    return next(new AppError("id không hợp lệ", 400));
+  }
+
+  const journal = await Journal.findOneAndUpdate(
+    { _id: id, user: userId, isDeleted: true },
+    { isDeleted: false, deletedAt: null },
+    { new: true },
+  ).populate("user", "name email");
+
+  if (!journal) {
+    return next(new AppError("Không tìm thấy nhật ký đã xóa", 404));
+  }
+
+  res.status(200).json({
+    status: "success",
+    message: "Journal restored successfully",
+    data: {
+      journal: {
+        _id: journal._id,
+        title: journal.title || "No title",
+        content: journal.content,
+        deletedAt: journal.deletedAt,
+        isDeleted: journal.isDeleted,
+      },
+    },
+  });
 });

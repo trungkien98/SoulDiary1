@@ -40,7 +40,23 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
-setupSwagger(app);
+try {
+  setupSwagger(app);
+} catch (err) {
+  if (process.env.NODE_ENV !== "production") {
+    console.error("❌ Swagger setup error:", err.message);
+  }
+}
+
+// Root route - redirect to API docs
+app.get("/", (req, res) => {
+  res.json({
+    status: "success",
+    message: "🎉 Soul Diary API is running!",
+    documentation: "Visit http://localhost:3000/api-docs for API documentation",
+    version: "1.0.0",
+  });
+});
 
 // routes
 app.use("/api/v1/auth", authRouter);
@@ -48,8 +64,10 @@ app.use("/api/v1/journals", journalRouter);
 app.use("/api/v1/mail", mailTestRoutes);
 app.use("/api/v1/otp", otpRouter);
 app.use("/api/v1/users", userRouter);
-app.use((req, res) => {
-  res.status(404).send("Not Found");
+
+// 404 handler - only for API routes
+app.use("/api/v1", (req, res) => {
+  res.status(404).json({ status: "fail", message: "Route not found" });
 });
 
 app.use(globalErrorController);
