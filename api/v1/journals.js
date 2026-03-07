@@ -4,7 +4,7 @@ const { connectDB } = require("../../lib/db");
 const { handleCORS, sendSuccess, sendError } = require("../../lib/utils");
 const { protect } = require("../../lib/auth");
 const Journal = require("../../models/journalModel");
-const APIFeatures = require("../../utils/apiFeature");
+const { APIFeatures } = require("../../utils/apiFeature");
 
 /**
  * Consolidated Journal Handler
