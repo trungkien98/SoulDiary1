@@ -20,6 +20,7 @@ exports.register = catchAsync(async (req, res, next) => {
   if (existed) {
     return next(new AppError("Email đã tồn tại", 409));
   }
+  
   const user = await User.create({
     email,
     password,
@@ -28,12 +29,24 @@ exports.register = catchAsync(async (req, res, next) => {
 
   const otp = await otpService.generateOTP("register", user._id);
 
-  await new Email(user, otp).sendWelcome();
+  try {
+    await new Email(user, otp).sendWelcome();
+  } catch (emailError) {
+    console.error("Email send error during registration:", emailError.message);
+    // Don't delete the user, but notify them of the email issue
+    return res.status(201).json({
+      status: "success",
+      message: "Đăng ký thành công. Lỗi gửi email - vui lòng dùng nút 'Gửi lại mã OTP'.",
+      data: {
+        email: user.email,
+        warning: "Email không thể gửi. Vui lòng kiểm tra cấu hình email."
+      },
+    });
+  }
 
   res.status(201).json({
     status: "success",
-    message:
-      "Đăng ký thành công. Vui lòng kiểm tra email để xác thực tài khoản.",
+    message: "Đăng ký thành công. Vui lòng kiểm tra email để xác thực tài khoản.",
     data: {
       email: user.email,
     },
@@ -49,16 +62,29 @@ exports.login = catchAsync(async (req, res, next) => {
   }
 
   const user = await authService.findUser(email, "+password");
-  if (!user || !user.password) {
+  
+  if (!user) {
+    console.log(`❌ Login failed: User not found with email ${email}`);
     return next(new AppError("Sai email hoặc mật khẩu", 401));
   }
+  
+  if (!user.password) {
+    console.log(`❌ Login failed: User ${email} has no password (social login)`);
+    return next(new AppError("Tài khoản này sử dụng đăng nhập xã hội. Vui lòng đăng nhập qua Google hoặc Facebook.", 401));
+  }
+  
   if (!user.isVerified) {
-    return next(new AppError("Tài khoản chưa được xác thực", 401));
+    console.log(`❌ Login failed: User ${email} not verified`);
+    return next(new AppError("Tài khoản chưa được xác thực. Vui lòng kiểm tra email để xác thực.", 401));
   }
 
   const ok = await user.correctPassword(password, user.password);
-  if (!ok) return next(new AppError("Sai email hoặc mật khẩu", 401));
+  if (!ok) {
+    console.log(`❌ Login failed: Wrong password for ${email}`);
+    return next(new AppError("Sai email hoặc mật khẩu", 401));
+  }
 
+  console.log(`✅ Login successful for ${email}`);
   await authService.createSendToken(user, 200, res);
 });
 

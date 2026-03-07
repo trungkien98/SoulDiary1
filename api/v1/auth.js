@@ -52,12 +52,29 @@ module.exports = async (req, res) => {
       if (!email || !password) return sendError(res, "Thiếu email hoặc password", 400);
 
       const user = await authService.findUser(email, "+password");
-      if (!user || !user.password) return sendError(res, "Sai email hoặc mật khẩu", 401);
-      if (!user.isVerified) return sendError(res, "Tài khoản chưa được xác thực", 401);
+      
+      if (!user) {
+        console.log(`❌ Login failed: User not found with email ${email}`);
+        return sendError(res, "Sai email hoặc mật khẩu", 401);
+      }
+      
+      if (!user.password) {
+        console.log(`❌ Login failed: User ${email} has no password (social login)`);
+        return sendError(res, "Tài khoản này sử dụng đăng nhập xã hội. Vui lòng đăng nhập qua Google hoặc Facebook.", 401);
+      }
+      
+      if (!user.isVerified) {
+        console.log(`❌ Login failed: User ${email} not verified`);
+        return sendError(res, "Tài khoản chưa được xác thực. Vui lòng kiểm tra email để xác thực.", 401);
+      }
 
       const ok = await user.correctPassword(password, user.password);
-      if (!ok) return sendError(res, "Sai email hoặc mật khẩu", 401);
+      if (!ok) {
+        console.log(`❌ Login failed: Wrong password for ${email}`);
+        return sendError(res, "Sai email hoặc mật khẩu", 401);
+      }
 
+      console.log(`✅ Login successful for ${email}`);
       const tokens = tokenService.signTokens(user);
       await User.findByIdAndUpdate(user._id, { refreshToken: tokens.refresh_token });
 
