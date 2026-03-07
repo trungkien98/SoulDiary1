@@ -54,6 +54,16 @@ exports.getMyJournals = catchAsync(async (req, res) => {
 
   const filter = buildJournalFilter(req.query, req.user._id);
 
+  // Handle includeDeleted query parameter
+  const includeDeleted = req.query.includeDeleted === 'true';
+  if (includeDeleted) {
+    // Show only deleted entries
+    filter.isDeleted = true;
+  } else {
+    // Show only active entries (default behavior)
+    filter.isDeleted = false;
+  }
+
   const [journals, total] = await Promise.all([
     Journal.find(filter)
       .populate("user", "name email")
