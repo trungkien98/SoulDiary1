@@ -1,15 +1,15 @@
 require("dotenv").config();
 
-const { connectDB } = require("../../../lib/db");
-const { handleCORS, sendSuccess, sendError } = require("../../../lib/utils");
-const { protect } = require("../../../lib/auth");
-const User = require("../../../models/userModel");
+const { connectDB } = require("../../lib/db");
+const { handleCORS, sendSuccess, sendError } = require("../../lib/utils");
+const { protect } = require("../../lib/auth");
+const User = require("../../models/userModel");
 
 /**
  * Consolidated User Handler
  * GET/PUT /api/v1/users/profile
  */
-export default async (req, res) => {
+module.exports = async (req, res) => {
   handleCORS(req, res);
   if (req.method === "OPTIONS") return;
 

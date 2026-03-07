@@ -1,15 +1,15 @@
 require("dotenv").config();
 
-const { connectDB } = require("../../../lib/db");
-const { handleCORS, sendSuccess, sendError } = require("../../../lib/utils");
-const otpService = require("../../../services/otpService");
-const User = require("../../../models/userModel");
+const { connectDB } = require("../../lib/db");
+const { handleCORS, sendSuccess, sendError } = require("../../lib/utils");
+const otpService = require("../../services/otpService");
+const User = require("../../models/userModel");
 
 /**
  * Consolidated OTP Handler
  * POST /api/v1/otp/verify
  */
-export default async (req, res) => {
+module.exports = async (req, res) => {
   handleCORS(req, res);
   if (req.method === "OPTIONS") return;
 

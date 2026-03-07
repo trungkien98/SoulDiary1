@@ -1,19 +1,19 @@
 require("dotenv").config();
 
-const { connectDB } = require("../../../lib/db");
-const { handleCORS, sendSuccess, sendError } = require("../../../lib/utils");
-const otpService = require("../../../services/otpService");
-const authService = require("../../../services/authService");
-const tokenService = require("../../../services/tokenService");
-const socialService = require("../../../services/socialService");
-const Email = require("../../../utils/sendEmail");
-const User = require("../../../models/userModel");
+const { connectDB } = require("../../lib/db");
+const { handleCORS, sendSuccess, sendError } = require("../../lib/utils");
+const otpService = require("../../services/otpService");
+const authService = require("../../services/authService");
+const tokenService = require("../../services/tokenService");
+const socialService = require("../../services/socialService");
+const Email = require("../../utils/sendEmail");
+const User = require("../../models/userModel");
 
 /**
  * Consolidated Auth Handler
  * POST /api/v1/auth?action=register|login|google|facebook|logout|refresh|forgot-password
  */
-export default async (req, res) => {
+module.exports = async (req, res) => {
   handleCORS(req, res);
   if (req.method === "OPTIONS") return;
 

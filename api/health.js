@@ -1,12 +1,12 @@
 require("dotenv").config();
 
-const { handleCORS, sendSuccess } = require("../../lib/utils");
+const { handleCORS, sendSuccess } = require("../lib/utils");
 
 /**
  * GET /api/health
  * Health check endpoint - responds immediately without DB check
  */
-export default async (req, res) => {
+module.exports = async (req, res) => {
   // Handle CORS
   handleCORS(req, res);
   if (req.method === "OPTIONS") return;

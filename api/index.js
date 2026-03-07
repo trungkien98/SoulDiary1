@@ -6,7 +6,7 @@ const { handleCORS, sendSuccess, sendError } = require("../lib/utils");
  * Catch-all handler for undefined routes
  * Provides API info and documentation
  */
-export default async (req, res) => {
+module.exports = async (req, res) => {
   // Handle CORS
   handleCORS(req, res);
   if (req.method === "OPTIONS") return;
