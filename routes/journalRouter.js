@@ -8,7 +8,7 @@ const router = express.Router();
  * @openapi
  * tags:
  *   - name: Journals
- *     description: 📔 Journal CRUD operations (requires authentication) | Các hành động CRUD nhật ký (yêu cầu đăng nhập) | Các hành động CRUD nhật ký (yêu cầu đăng nhập)
+ *     description: 📔 Journal CRUD operations (requires authentication) | Các hành động CRUD nhật ký (yêu cầu đăng nhập)
  */
 
 /**
