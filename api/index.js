@@ -1,46 +1,38 @@
 require("dotenv").config();
 
-const serverless = require("serverless-http");
-const mongoose = require("mongoose");
-const app = require("../app");
+const { handleCORS, sendSuccess, sendError } = require("../lib/utils");
 
-// Connection state management
-let mongoConnection = null;
+/**
+ * Catch-all handler for undefined routes
+ * Provides API info and documentation
+ */
+export default async (req, res) => {
+  // Handle CORS
+  handleCORS(req, res);
+  if (req.method === "OPTIONS") return;
 
-// Connect to MongoDB with timeout
-const connectToMongo = async () => {
-  if (mongoConnection) {
-    return mongoConnection;
+  // Root endpoint
+  if (req.url === "/" || req.url === "") {
+    return sendSuccess(
+      res,
+      {
+        message: "Soul Diary API - Journaling Application",
+        version: "1.0.0",
+        documentation: "https://github.com/your-repo",
+        healthCheck: "/api/health",
+        endpoints: {
+          auth: "/api/v1/auth",
+          journals: "/api/v1/journals",
+          users: "/api/v1/users",
+          otp: "/api/v1/otp",
+        },
+      },
+      200,
+      "🎉 Soul Diary API is running!"
+    );
   }
 
-  return mongoose.connect(
-    process.env.MONGO_URI || process.env.DATABASE,
-    {
-      serverSelectionTimeoutMS: 8000,
-      connectTimeoutMS: 8000,
-      maxPoolSize: 1,
-    }
-  ).then(conn => {
-    mongoConnection = conn;
-    return conn;
-  }).catch(err => {
-    console.error("💥 MongoDB failed:", err.message);
-    throw err;
-  });
+  // For any other unmatched route
+  return sendError(res, "Route not found", 404);
 };
 
-// Hook into /api/v1 requests to ensure DB is ready
-app.use("/api/v1", async (req, res, next) => {
-  try {
-    await connectToMongo();
-    next();
-  } catch (err) {
-    res.status(503).json({
-      status: "fail",
-      message: "Service unavailable",
-    });
-  }
-});
-
-// Export serverless handler - Vercel will call this
-module.exports = serverless(app);

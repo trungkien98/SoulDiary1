@@ -1,15 +1,11 @@
 {
   "version": 2,
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "api/index.js"
-    }
-  ],
   "functions": {
-    "api/index.js": {
-      "maxDuration": 60,
-      "memory": 2048
+    "api/**/*.js": {
+      "maxDuration": 30,
+      "memory": 1024
     }
-  }
+  },
+  "buildCommand": "echo 'Skipping build'",
+  "devCommand": "node server.js"
 }
