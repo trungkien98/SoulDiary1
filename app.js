@@ -48,7 +48,7 @@ try {
   }
 }
 
-// Root route - redirect to API docs
+// Root route - no DB required, responds immediately
 app.get("/", (req, res) => {
   res.json({
     status: "success",
