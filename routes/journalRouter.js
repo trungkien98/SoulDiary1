@@ -399,7 +399,6 @@ router.delete("/:id", protect, journalController.deleteJournal);
  *     tags: [Journals]
  *     summary: Restore a soft-deleted journal | Khôi phục nhật ký đã xóa
  *     description: Restore a journal entry that was previously soft-deleted | Khôi phục bài nhật ký đã xóa trước đó
- *     description: Restore a journal entry that was previously soft-deleted
  *     security:
  *       - bearer: []
  *     parameters:

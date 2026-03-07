@@ -1,5 +1,6 @@
 require("dotenv").config();
 
+const serverless = require("serverless-http");
 const database = require("../config/db");
 const app = require("../app");
 
@@ -17,13 +18,10 @@ const connectDB = async () => {
   }
 };
 
-// Vercel serverless handler
-module.exports = async (req, res) => {
-  // Initialize DB on first request
-  if (!dbConnected) {
-    await connectDB();
-  }
+// Initialize DB before handling requests
+(async () => {
+  await connectDB();
+})();
 
-  // Handle the request through the Express app
-  return app(req, res);
-};
+// Vercel serverless handler
+module.exports = serverless(app);
