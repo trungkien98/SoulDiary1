@@ -49,11 +49,6 @@ const connectDB = async () => {
   return connectionPromise;
 };
 
-// Initialize DB connection on module load (non-blocking)
-connectDB().catch((err) => {
-  console.error("⚠️  Initial DB connection attempt failed (will retry on request):", err.message);
-});
-
 // Middleware to ensure DB is connected for API routes (but not health checks)
 app.use("/api/v1", async (req, res, next) => {
   try {

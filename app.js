@@ -40,20 +40,25 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
-try {
-  setupSwagger(app);
-} catch (err) {
-  if (process.env.NODE_ENV !== "production") {
+// Only setup Swagger in development to avoid Vercel cold start overhead
+if (process.env.NODE_ENV !== "production") {
+  try {
+    setupSwagger(app);
+  } catch (err) {
     console.error("❌ Swagger setup error:", err.message);
   }
 }
 
 // Root route - no DB required, responds immediately
 app.get("/", (req, res) => {
+  const docsUrl = process.env.NODE_ENV === "production" 
+    ? "https://souldiary1.vercel.app/api-docs"
+    : "http://localhost:3000/api-docs";
+  
   res.json({
     status: "success",
     message: "🎉 Soul Diary API is running!",
-    documentation: "Visit http://localhost:3000/api-docs for API documentation",
+    documentation: `Visit ${docsUrl} for API documentation`,
     version: "1.0.0",
   });
 });
