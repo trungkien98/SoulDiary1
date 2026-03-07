@@ -69,7 +69,7 @@ app.get("/", (req, res) => {
 // routes
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/journals", journalRouter);
-app.use("/api/v1/mail", mailTestRoutes);
+app.use("/api/v1/test", mailTestRoutes);
 app.use("/api/v1/otp", otpRouter);
 app.use("/api/v1/users", userRouter);
 

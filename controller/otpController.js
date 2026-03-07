@@ -83,23 +83,41 @@ exports.resendOTP = catchAsync(async (req, res, next) => {
           return next(new AppError("Người dùng chưa xác thực", 400));
         }
         otp = await otpService.generateOTP(type, user._id);
-        await new Email(user, otp).sendPasswordReset();
-        break;
+        try {
+          await new Email(user, otp).sendPasswordReset();
+        } catch (emailError) {
+          console.error("Email send error:", emailError.message);
+          await otpService.clearOTP(type, user._id);
+          return next(new AppError("Lỗi khi gửi mã OTP. Vui lòng kiểm tra cấu hình email.", 500));
+        }
+        return res.status(200).json({
+          status: "success",
+          message: "Mã OTP đã được gửi về email của bạn",
+        });
+        
       case "register":
         if (user.isVerified) {
           return next(new AppError("Người dùng đã xác thực", 400));
         }
         otp = await otpService.generateOTP(type, user._id);
-        await new Email(user, otp).sendWelcome();
-        break;
+        try {
+          await new Email(user, otp).sendWelcome();
+        } catch (emailError) {
+          console.error("Email send error:", emailError.message);
+          await otpService.clearOTP(type, user._id);
+          return next(new AppError("Lỗi khi gửi mã OTP. Vui lòng kiểm tra cấu hình email.", 500));
+        }
+        return res.status(200).json({
+          status: "success",
+          message: "Mã OTP đã được gửi về email của bạn",
+        });
+        
+      default:
+        return next(new AppError("Loại OTP không hợp lệ", 400));
     }
   } catch (error) {
     await otpService.clearOTP(type, user._id);
+    console.error("Unexpected error in resendOTP:", error.message);
     return next(new AppError("Lỗi khi gửi mã OTP", 500));
   }
-
-  res.status(200).json({
-    status: "success",
-    message: "Mã OTP đã được gửi lại",
-  });
 });
