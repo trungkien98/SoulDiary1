@@ -2,7 +2,10 @@ const express = require("express");
 const app = express();
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
-const setupSwagger = require("./swagger");
+
+// Only import Swagger in development
+const setupSwagger = process.env.NODE_ENV !== "production" ? require("./swagger") : null;
+
 const authRouter = require("./routes/authRouter");
 const journalRouter = require("./routes/journalRouter");
 const globalErrorController = require("./controller/errorController");
@@ -40,8 +43,8 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
-// Only setup Swagger in development to avoid Vercel cold start overhead
-if (process.env.NODE_ENV !== "production") {
+// Setup Swagger only in development
+if (setupSwagger) {
   try {
     setupSwagger(app);
   } catch (err) {

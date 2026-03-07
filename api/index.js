@@ -4,65 +4,43 @@ const serverless = require("serverless-http");
 const mongoose = require("mongoose");
 const app = require("../app");
 
-// Cache for database connection
-let cachedConnection = null;
-let connectionPromise = null;
+// Connection state management
+let mongoConnection = null;
 
-const connectDB = async () => {
-  // Return cached connection if already connected
-  if (cachedConnection) {
-    return cachedConnection;
+// Connect to MongoDB with timeout
+const connectToMongo = async () => {
+  if (mongoConnection) {
+    return mongoConnection;
   }
 
-  // Return pending connection promise if in progress
-  if (connectionPromise) {
-    return connectionPromise;
-  }
-
-  // Create new connection
-  connectionPromise = (async () => {
-    try {
-      const uri = process.env.MONGO_URI || process.env.DATABASE;
-      if (!uri) {
-        throw new Error("Missing MONGO_URI or DATABASE environment variable");
-      }
-
-      console.log("🔄 Connecting to MongoDB...");
-      
-      const connection = await mongoose.connect(uri, {
-        serverSelectionTimeoutMS: 10000,
-        connectTimeoutMS: 10000,
-        socketTimeoutMS: 60000,
-        maxPoolSize: 1, // Limit pool size for serverless
-      });
-
-      cachedConnection = connection;
-      console.log("✅ MongoDB connected");
-      return connection;
-    } catch (error) {
-      console.error("❌ MongoDB connection failed:", error.message);
-      connectionPromise = null; // Reset promise on failure
-      throw error;
+  return mongoose.connect(
+    process.env.MONGO_URI || process.env.DATABASE,
+    {
+      serverSelectionTimeoutMS: 8000,
+      connectTimeoutMS: 8000,
+      maxPoolSize: 1,
     }
-  })();
-
-  return connectionPromise;
+  ).then(conn => {
+    mongoConnection = conn;
+    return conn;
+  }).catch(err => {
+    console.error("💥 MongoDB failed:", err.message);
+    throw err;
+  });
 };
 
-// Middleware to ensure DB is connected for API routes (but not health checks)
+// Hook into /api/v1 requests to ensure DB is ready
 app.use("/api/v1", async (req, res, next) => {
   try {
-    await connectDB();
+    await connectToMongo();
     next();
-  } catch (error) {
-    console.error("❌ DB connection failed for request:", error.message);
-    return res.status(503).json({
+  } catch (err) {
+    res.status(503).json({
       status: "fail",
-      message: "Database service temporarily unavailable",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+      message: "Service unavailable",
     });
   }
 });
 
-// Vercel serverless handler
+// Export serverless handler - Vercel will call this
 module.exports = serverless(app);
