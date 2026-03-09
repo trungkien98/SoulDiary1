@@ -20,6 +20,7 @@ module.exports = async (req, res) => {
     await connectDB();
     const user = await protect(req);
     const userId = user._id;
+    const { id } = req.query;
     const action = req.query.action;
     console.log(`📚 Journal handler - user: ${userId}, method: ${req.method}, action: ${action}`);
 
@@ -64,7 +65,7 @@ module.exports = async (req, res) => {
       try {
         const journal = await Journal.findOne({
           _id: journalId,
-          user: user._id,
+          user: userId,
           isDeleted: true,
         });
         if (!journal) return sendError(res, "Journal not found or already active", 404);
@@ -103,7 +104,10 @@ module.exports = async (req, res) => {
         console.log(`📚 Fetching journals list - user: ${userId}, page: ${req.query.page || 1}`);
         // Handle soft delete filtering based on includeDeleted parameter
         const includeDeleted = req.query.includeDeleted === 'true';
-        const baseFilter = { user: userId, isDeleted: includeDeleted };
+        // Fix: Only filter by isDeleted: false for non-deleted entries, or use empty filter to get all
+        const baseFilter = includeDeleted 
+          ? { user: userId }  // Get all entries (both deleted and non-deleted)
+          : { user: userId, isDeleted: false };  // Get only non-deleted entries
         
         // Create query with base filter
         let query = Journal.find(baseFilter);
@@ -111,7 +115,7 @@ module.exports = async (req, res) => {
         // Apply additional filters from query params (excluding includeDeleted to avoid override)
         const { includeDeleted: _, ...queryWithoutDelete } = req.query;
         const features = new APIFeatures(query, queryWithoutDelete).filter().sort().paginate();
-        const journals = await features.query;
+        const journals = await features.query || [];  // Ensure journals is always an array
         const totalResults = await Journal.countDocuments(baseFilter);
         
         console.log(`✅ Journals retrieved - count: ${journals.length}, totalResults: ${totalResults}`);
@@ -131,8 +135,18 @@ module.exports = async (req, res) => {
           "Your journal entries have been retrieved successfully."
         );
       } catch (error) {
-        console.error(`❌ Get journal error - user: ${userId}:`, error);
-        return sendError(res, "Unable to fetch journal entries. Please try again.", 500);
+        console.error(`❌ Get journal error - user: ${userId}:`, {
+          message: error.message,
+          stack: error.stack,
+          code: error.code,
+          name: error.name,
+          constructor: error.constructor?.name
+        });
+        // Return more specific error message in development
+        const errorMsg = process.env.NODE_ENV === 'development' 
+          ? error.message 
+          : "Unable to fetch journal entries. Please try again.";
+        return sendError(res, errorMsg, 500);
       }
     }
 

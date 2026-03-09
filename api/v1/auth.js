@@ -178,7 +178,7 @@ module.exports = async (req, res) => {
         res,
         { email: user.email },
         201,
-        "Đăng ký thành công. Vui lòng kiểm tra email để xác thực tài khoản."
+        \"Registration successful! Please check your email to verify your account.\"\n      );
       );
     }
 
@@ -200,19 +200,20 @@ module.exports = async (req, res) => {
       }
       
       if (!user.isVerified) {
-        console.log(`❌ Login failed: User ${email} not verified`);
-        return sendError(res, "Tài khoản chưa được xác thực. Vui lòng kiểm tra email để xác thực.", 401);
+        console.log(`⚠️ Login failed - email not verified: ${email}`);
+        return sendError(res, "Your email has not been verified yet. Please check your email for the verification link.", 403);
       }
 
       const ok = await user.correctPassword(password, user.password);
       if (!ok) {
-        console.log(`❌ Login failed: Wrong password for ${email}`);
-        return sendError(res, "Sai email hoặc mật khẩu", 401);
+        console.log(`⚠️ Login failed - incorrect password: ${email}`);
+        return sendError(res, "Invalid email or password. Please check and try again.", 401);
       }
 
-      console.log(`✅ Login successful for ${email}`);
+      console.log(`✅ Login successful - user: ${user._id}, email: ${email}`);
       const tokens = tokenService.signTokens(user);
       await User.findByIdAndUpdate(user._id, { refreshToken: tokens.refresh_token });
+      console.log(`🎫 Tokens generated and stored`);
 
       res.setHeader(
         "Set-Cookie",
@@ -226,14 +227,18 @@ module.exports = async (req, res) => {
           user: { _id: user._id, name: user.name, email: user.email, photo: user.photo },
         },
         200,
-        "Đăng nhập thành công"
+        "You have been logged in successfully."
       );
     }
 
     // GOOGLE LOGIN
     if (action === "google") {
       const { idToken } = req.body;
-      if (!idToken) return sendError(res, "Thiếu idToken", 400);
+      console.log(`🔵 Google login attempt`);
+      if (!idToken) {
+        console.log(`⚠️ Google login failed - idToken not provided`);
+        return sendError(res, "Google ID token is required for authentication.", 400);
+      }
 
       const payload = await socialService.verifyGoogleIdToken(idToken);
       const googleId = payload.sub;
@@ -286,7 +291,11 @@ module.exports = async (req, res) => {
     // FACEBOOK LOGIN
     if (action === "facebook") {
       const { accessToken } = req.body;
-      if (!accessToken) return sendError(res, "Thiếu accessToken", 400);
+      console.log(`🔵 Facebook login attempt`);
+      if (!accessToken) {
+        console.log(`⚠️ Facebook login failed - accessToken not provided`);
+        return sendError(res, "Facebook access token is required for authentication.", 400);
+      }
 
       const profile = await socialService.verifyFacebookToken(accessToken);
       const facebookId = profile.id;
