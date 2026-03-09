@@ -11,13 +11,26 @@ const User = require("../../models/userModel");
 
 /**
  * Consolidated Auth Handler
- * POST /api/v1/auth?action=register|login|google|facebook|logout|refresh|forgot-password
+ * Handles:
+ * POST /api/v1/auth?action=register|login|google|facebook|logout|refresh
+ * GET /api/v1/auth/google-oauth?redirect=...
+ * GET /api/v1/auth/google-oauth-callback?code=...&state=...
+ * GET /api/v1/auth/facebook-oauth?redirect=...
+ * GET /api/v1/auth/facebook-oauth-callback?code=...&state=...
  */
 module.exports = async (req, res) => {
   handleCORS(req, res);
   if (req.method === "OPTIONS") return;
 
-  const { action } = req.query;
+  let action = req.query.action;
+
+  // Extract action from URL path if not in query params
+  if (!action && req.url) {
+    const pathMatch = req.url.match(/\/(google-oauth|facebook-oauth|google-oauth-callback|facebook-oauth-callback)/);
+    if (pathMatch) {
+      action = pathMatch[1];
+    }
+  }
 
   // ====== HANDLE GET REQUESTS FOR OAUTH ======
   if (req.method === "GET") {
