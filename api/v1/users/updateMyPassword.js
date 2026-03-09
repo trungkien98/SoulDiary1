@@ -25,10 +25,10 @@ module.exports = async (req, res) => {
     const user = await protect(req);
     console.log(`🔐 Password change requested for user: ${user._id}`);
 
-    const { currentPassword, newPassword, confirmPassword } = req.body;
+    const { currentPassword, newPassword, confirmPassword, isReset } = req.body;
 
     // Validation
-    console.log(`📝 Validating password fields - newPassword provided: ${!!newPassword}, confirmPassword provided: ${!!confirmPassword}`);
+    console.log(`📝 Validating password fields - newPassword provided: ${!!newPassword}, confirmPassword provided: ${!!confirmPassword}, isReset: ${isReset}`);
     
     if (!newPassword) {
       console.log(`⚠️ Validation failed: newPassword is missing`);
@@ -52,10 +52,10 @@ module.exports = async (req, res) => {
 
     // If user has a password, verify the current password before changing
     const hasExistingPassword = !!userWithPassword.password;
-    console.log(`🔑 User has existing password: ${hasExistingPassword}`);
+    console.log(`🔑 User has existing password: ${hasExistingPassword}, isReset: ${isReset}`);
     
-    if (hasExistingPassword) {
-      // User has existing password - must verify current password
+    if (hasExistingPassword && !isReset) {
+      // User has existing password and this is NOT a password reset - must verify current password
       if (!currentPassword) {
         console.log(`⚠️ currentPassword required but not provided`);
         return sendError(res, "Please enter your current password to verify your identity before changing it.", 400);
@@ -74,10 +74,14 @@ module.exports = async (req, res) => {
       }
       console.log(`✅ currentPassword verified successfully`);
     } else {
-      // User doesn't have a password yet (social account or password reset)
-      // In this case, they're setting a password for the first time
-      // No need to verify current password
-      console.log(`ℹ️ User setting password for first time (no existing password)`);
+      // Either user doesn't have a password yet (social account or password reset)
+      // OR this is a password reset flow (isReset=true)
+      // In this case, no need to verify current password
+      if (isReset) {
+        console.log(`ℹ️ Password reset flow - skipping current password verification`);
+      } else {
+        console.log(`ℹ️ User setting password for first time (no existing password)`);
+      }
     }
 
     // Update password
