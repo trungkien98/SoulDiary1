@@ -23,9 +23,11 @@ module.exports = async (req, res) => {
 
     // Check for restore endpoint: /journals/:id/restore
     // In Vercel, req.url will be the path after /api/v1/journals
-    const restoreMatch = req.url?.match(/^\/([a-f0-9]{24})\/restore/i) || req.url?.match(/\/([a-f0-9]{24})\/restore/i);
+    const urlPath = req.url?.split('?')[0]; // Remove query string
+    const restoreMatch = urlPath?.match(/\/([a-f0-9]{24})\/restore/i);
     if (restoreMatch && req.method === "PATCH") {
       const journalId = restoreMatch[1];
+      console.log(`♻️ Restore journal: ${journalId}`);
       try {
         const journal = await Journal.findOne({
           _id: journalId,
