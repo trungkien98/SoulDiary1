@@ -178,7 +178,7 @@ module.exports = async (req, res) => {
         res,
         { email: user.email },
         201,
-        \"Registration successful! Please check your email to verify your account.\"\n      );
+        "Registration successful! Please check your email to verify your account."
       );
     }
 
@@ -392,13 +392,32 @@ module.exports = async (req, res) => {
       const { email } = req.body;
       if (!email) return sendError(res, "Thiếu email", 400);
 
-      const user = await authService.findUser(email);
-      if (!user) return sendError(res, "Người dùng không tồn tại", 404);
+      try {
+        console.log(`🔐 Forgot password request - email: ${email}`);
+        
+        const user = await authService.findUser(email);
+        if (!user) {
+          console.log(`⚠️ User not found: ${email}`);
+          return sendError(res, "Người dùng không tồn tại", 404);
+        }
+        
+        console.log(`✅ User found: ${user._id}`);
+        
+        const otp = await otpService.generateOTP("forgot_password", user._id);
+        console.log(`✅ OTP generated: ${otp._id}`);
+        
+        await new Email(user, otp).sendPasswordReset();
+        console.log(`✅ Password reset email sent to: ${email}`);
 
-      const otp = await otpService.generateOTP("forgot_password", user._id);
-      await new Email(user, otp).sendPasswordReset();
-
-      return sendSuccess(res, { email: user.email }, 200, "OTP sent to your email");
+        return sendSuccess(res, { email: user.email }, 200, "OTP sent to your email");
+      } catch (forgotPasswordError) {
+        console.error(`❌ Forgot password error - email: ${email}:`, {
+          message: forgotPasswordError.message,
+          stack: forgotPasswordError.stack,
+          code: forgotPasswordError.code
+        });
+        return sendError(res, "Unable to process password reset. Please try again.", 500);
+      }
     }
 
     console.log(`⚠️ Invalid or unknown auth action: ${action}`);
