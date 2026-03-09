@@ -45,9 +45,9 @@ const router = express.Router();
  *                 type: array
  *                 items:
  *                   type: string
- *                   enum: [personal, growth, achievement, reflection, healing, relationships, career, health, creative, gratitude]
- *                 description: Tags to organize journals (select from predefined list)
- *                 example: [personal, growth, achievement]
+ *                   enum: [personal, growth, achievement, reflection, healing, gratitude, relationships, family, work, career, health, self-care, creative, morning, evening, challenge, success]
+ *                 description: Tags to organize journals (select from predefined list, organized by category)
+ *                 example: [personal, growth, morning]
  *               entryDate:
  *                 type: string
  *                 format: date-time
