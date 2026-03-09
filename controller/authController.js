@@ -261,3 +261,202 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
     message: "OTP đặt lại mật khẩu đã được gửi về email.",
   });
 });
+
+// ====== BROWSER-BASED GOOGLE OAUTH ======
+// Step 1: Send user to Google consent screen
+exports.googleOAuthBrowser = catchAsync(async (req, res, next) => {
+  const { redirect } = req.query;
+  if (!redirect) return next(new AppError("Missing redirect parameter", 400));
+
+  // Get base URL from request headers for proper callback URI
+  const protocol = req.secure ? 'https' : 'http';
+  const host = req.get('host');
+  const backendCallbackUri = `${protocol}://${host}/api/v1/auth/google-oauth-callback`;
+  
+  // Generate consent URL with state-based redirect storage
+  const { authUrl } = socialService.generateGoogleConsentUrl(backendCallbackUri, redirect);
+  
+  res.redirect(authUrl);
+});
+
+// Step 2: Handle Google OAuth callback and redirect back to app
+exports.googleOAuthCallback = catchAsync(async (req, res, next) => {
+  const { code, state, error } = req.query;
+  
+  // Retrieve app redirect URI from state
+  const stateData = socialService.getOAuthState(state);
+  if (!stateData) {
+    return res.status(400).json({ 
+      status: 'error', 
+      message: 'Invalid or expired OAuth state. Please try again.' 
+    });
+  }
+  
+  const redirectUri = stateData.appRedirectUri;
+
+  if (error) {
+    const errorMsg = encodeURIComponent(`Google auth failed: ${error}`);
+    return res.redirect(`${redirectUri}?error=${errorMsg}`);
+  }
+
+  if (!code) {
+    return res.redirect(`${redirectUri}?error=${encodeURIComponent('No auth code received')}`);
+  }
+
+  try {
+    // Get base URL from request headers
+    const protocol = req.secure ? 'https' : 'http';
+    const host = req.get('host');
+    const backendCallbackUri = `${protocol}://${host}/api/v1/auth/google-oauth-callback`;
+    
+    // Exchange auth code for tokens
+    const { idToken, payload } = await socialService.exchangeGoogleCode(code, backendCallbackUri);
+
+    // Process user (same logic as googleLogin)
+    const googleId = payload.sub;
+    const email = payload.email;
+    const name = payload.name;
+    const photo = payload.picture;
+
+    let user = await User.findOne({ googleId }).select("+refreshToken");
+
+    if (!user && email) {
+      user = await User.findOne({ email }).select("+refreshToken");
+      if (user) {
+        user.googleId = googleId;
+        if (!user.photo && photo) user.photo = photo;
+        if (!user.name && name) user.name = name;
+        await user.save({ validateBeforeSave: false });
+      }
+    }
+
+    if (!user) {
+      user = await User.create({
+        email,
+        name,
+        photo,
+        googleId,
+        password: null,
+        isUpdatePassword: false,
+        isVerified: true,
+      });
+    }
+
+    // Generate token
+    const tokens = tokenService.signTokens(user);
+    
+    // Save refreshToken to DB
+    await User.findByIdAndUpdate(user._id, { refreshToken: tokens.refresh_token });
+
+    // Redirect back to app with token
+    const appRedirect = req.query.redirect || 'souldiary://oauth-callback';
+    const tokenParam = encodeURIComponent(tokens.access_token);
+    return res.redirect(`${appRedirect}?token=${tokenParam}&provider=google`);
+  } catch (error) {
+    console.error("Google OAuth callback error:", error);
+    const errorMsg = encodeURIComponent(`Authentication failed: ${error.message}`);
+    return res.redirect(`${redirectUri}?error=${errorMsg}`);
+  }
+});
+
+// ====== BROWSER-BASED FACEBOOK OAUTH ======
+// Step 1: Send user to Facebook consent screen
+exports.facebookOAuthBrowser = catchAsync(async (req, res, next) => {
+  const { redirect } = req.query;
+  if (!redirect) return next(new AppError("Missing redirect parameter", 400));
+
+  // Get base URL from request headers
+  const protocol = req.secure ? 'https' : 'http';
+  const host = req.get('host');
+  const backendCallbackUri = `${protocol}://${host}/api/v1/auth/facebook-oauth-callback`;
+  
+  // Generate consent URL with state-based redirect storage
+  const { authUrl } = socialService.generateFacebookConsentUrl(backendCallbackUri, redirect);
+  
+  res.redirect(authUrl);
+});
+
+// Step 2: Handle Facebook OAuth callback and redirect back to app
+exports.facebookOAuthCallback = catchAsync(async (req, res, next) => {
+  const { code, state, error } = req.query;
+  
+  // Retrieve app redirect URI from state
+  const stateData = socialService.getOAuthState(state);
+  if (!stateData) {
+    return res.status(400).json({ 
+      status: 'error', 
+      message: 'Invalid or expired OAuth state. Please try again.' 
+    });
+  }
+  
+  const redirectUri = stateData.appRedirectUri;
+
+  if (error) {
+    const errorMsg = encodeURIComponent(`Facebook auth failed: ${error}`);
+    return res.redirect(`${redirectUri}?error=${errorMsg}`);
+  }
+
+  if (!code) {
+    return res.redirect(`${redirectUri}?error=${encodeURIComponent('No auth code received')}`);
+  }
+
+  try {
+    // Get base URL from request headers
+    const protocol = req.secure ? 'https' : 'http';
+    const host = req.get('host');
+    const backendCallbackUri = `${protocol}://${host}/api/v1/auth/facebook-oauth-callback`;
+
+    // Exchange auth code for tokens
+    const { accessToken, userData } = await socialService.exchangeFacebookCode(code, backendCallbackUri);
+
+    // Process user (same logic as facebookLogin)
+    const facebookId = userData.id;
+    const email = userData.email;
+    const name = userData.name;
+    const photo = userData.picture?.data?.url;
+
+    let user = await User.findOne({ facebookId }).select("+refreshToken");
+
+    if (!user && email) {
+      user = await User.findOne({ email }).select("+refreshToken");
+      if (user) {
+        user.facebookId = facebookId;
+        if (!user.photo && photo) user.photo = photo;
+        if (!user.name && name) user.name = name;
+        await user.save({ validateBeforeSave: false });
+      }
+    }
+
+    if (!user) {
+      if (!email) {
+        const errorMsg = encodeURIComponent('Facebook did not provide email. Please grant email permission.');
+        return res.redirect(`${redirectUri}?error=${errorMsg}`);
+      }
+
+      user = await User.create({
+        email,
+        name,
+        photo,
+        facebookId,
+        password: null,
+        isUpdatePassword: false,
+        isVerified: true,
+      });
+    }
+
+    // Generate token
+    const tokens = tokenService.signTokens(user);
+
+    // Save refreshToken to DB
+    await User.findByIdAndUpdate(user._id, { refreshToken: tokens.refresh_token });
+
+    // Redirect back to app with token
+    const appRedirect = redirectUri || 'souldiary://oauth-callback';
+    const tokenParam = encodeURIComponent(tokens.access_token);
+    return res.redirect(`${appRedirect}?token=${tokenParam}&provider=facebook`);
+  } catch (error) {
+    console.error("Facebook OAuth callback error:", error);
+    const errorMsg = encodeURIComponent(`Authentication failed: ${error.message}`);
+    return res.redirect(`${redirectUri}?error=${errorMsg}`);
+  }
+});

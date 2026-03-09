@@ -302,4 +302,110 @@ router.post("/refresh", authController.refresh);
  */
 router.post("/forgot-password", authController.forgotPassword);
 
+/**
+ * @openapi
+ * /api/v1/auth/google-oauth:
+ *   get:
+ *     summary: Browser-based Google OAuth - Redirect to Google consent | OAuth qua trình duyệt Web
+ *     tags: [Auth]
+ *     parameters:
+ *       - name: redirect
+ *         in: query
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: App redirect URI after OAuth (e.g., souldiary://oauth-callback)
+ *         example: souldiary://oauth-callback
+ *     responses:
+ *       302:
+ *         description: Redirect to Google OAuth consent screen
+ */
+router.get("/google-oauth", authController.googleOAuthBrowser);
+
+/**
+ * @openapi
+ * /api/v1/auth/google-oauth-callback:
+ *   get:
+ *     summary: Google OAuth callback - Handle authorization code exchange
+ *     tags: [Auth]
+ *     parameters:
+ *       - name: code
+ *         in: query
+ *         schema:
+ *           type: string
+ *         description: Authorization code from Google
+ *       - name: state
+ *         in: query
+ *         schema:
+ *           type: string
+ *         description: State parameter for CSRF protection
+ *       - name: error
+ *         in: query
+ *         schema:
+ *           type: string
+ *         description: Error code if user denies access
+ *       - name: redirect
+ *         in: query
+ *         schema:
+ *           type: string
+ *         description: App redirect URI
+ *     responses:
+ *       302:
+ *         description: Redirect back to app with token or error
+ */
+router.get("/google-oauth-callback", authController.googleOAuthCallback);
+
+/**
+ * @openapi
+ * /api/v1/auth/facebook-oauth:
+ *   get:
+ *     summary: Browser-based Facebook OAuth - Redirect to Facebook consent | OAuth qua trình duyệt Web
+ *     tags: [Auth]
+ *     parameters:
+ *       - name: redirect
+ *         in: query
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: App redirect URI after OAuth (e.g., souldiary://oauth-callback)
+ *         example: souldiary://oauth-callback
+ *     responses:
+ *       302:
+ *         description: Redirect to Facebook OAuth consent screen
+ */
+router.get("/facebook-oauth", authController.facebookOAuthBrowser);
+
+/**
+ * @openapi
+ * /api/v1/auth/facebook-oauth-callback:
+ *   get:
+ *     summary: Facebook OAuth callback - Handle authorization code exchange
+ *     tags: [Auth]
+ *     parameters:
+ *       - name: code
+ *         in: query
+ *         schema:
+ *           type: string
+ *         description: Authorization code from Facebook
+ *       - name: state
+ *         in: query
+ *         schema:
+ *           type: string
+ *         description: State parameter for CSRF protection
+ *       - name: error
+ *         in: query
+ *         schema:
+ *           type: string
+ *         description: Error code if user denies access
+ *       - name: redirect
+ *         in: query
+ *         schema:
+ *           type: string
+ *         description: App redirect URI
+ *     responses:
+ *       302:
+ *         description: Redirect back to app with token or error
+ */
+router.get("/facebook-oauth-callback", authController.facebookOAuthCallback);
+
 module.exports = router;
