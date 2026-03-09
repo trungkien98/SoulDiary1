@@ -3,6 +3,7 @@ require("dotenv").config();
 const { connectDB } = require("../../lib/db");
 const { handleCORS, sendSuccess, sendError } = require("../../lib/utils");
 const otpService = require("../../services/otpService");
+const tokenService = require("../../services/tokenService");
 const User = require("../../models/userModel");
 const Email = require("../../utils/sendEmail");
 
@@ -108,8 +109,20 @@ module.exports = async (req, res) => {
         );
       }
 
+      // For password reset, return a temporary token
       console.log(`✅ OTP verified for password reset - user: ${user._id}`);
-      return sendSuccess(res, { verified: true }, 200, "Your identity has been verified. You can now reset your password.");
+      const tempToken = tokenService.signAccessToken(user);
+      console.log(`🔑 Temporary password reset token generated`);
+      
+      return sendSuccess(
+        res,
+        { 
+          verified: true,
+          token: tempToken
+        }, 
+        200, 
+        "Your identity has been verified. You can now reset your password."
+      );
     }
 
     // Legacy format (with userId)
