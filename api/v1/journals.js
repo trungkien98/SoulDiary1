@@ -20,14 +20,38 @@ module.exports = async (req, res) => {
     await connectDB();
     const user = await protect(req);
     const { id } = req.query;
+    const action = req.query.action;
 
-    // Check for restore endpoint: /journals/:id/restore
+    // RESTORE endpoint: PATCH /api/v1/journals?id=xxx&action=restore
+    if (action === 'restore' && req.method === 'PATCH') {
+      if (!id) return sendError(res, "Journal ID is required", 400);
+      
+      try {
+        const journal = await Journal.findOne({
+          _id: id,
+          user: user._id,
+          isDeleted: true,
+        });
+        if (!journal) return sendError(res, "Journal not found or already active", 404);
+        
+        journal.isDeleted = false;
+        journal.deletedAt = null;
+        await journal.save();
+        
+        return sendSuccess(res, { journal }, 200, "Journal restored successfully");
+      } catch (error) {
+        console.error("Restore journal error:", error);
+        return sendError(res, error.message || "Failed to restore journal", 500);
+      }
+    }
+
+    // Check for restore endpoint: /journals/:id/restore (legacy support)
     // In Vercel, req.url will be the path after /api/v1/journals
     const urlPath = req.url?.split('?')[0]; // Remove query string
     const restoreMatch = urlPath?.match(/\/([a-f0-9]{24})\/restore/i);
     if (restoreMatch && req.method === "PATCH") {
       const journalId = restoreMatch[1];
-      console.log(`♻️ Restore journal: ${journalId}`);
+      console.log(`♻️ Restore journal (legacy): ${journalId}`);
       try {
         const journal = await Journal.findOne({
           _id: journalId,
