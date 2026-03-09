@@ -26,8 +26,8 @@ module.exports = async (req, res) => {
     const { currentPassword, newPassword, confirmPassword } = req.body;
 
     // Validation
-    if (!currentPassword || !newPassword) {
-      return sendError(res, "Vui lòng nhập currentPassword và newPassword", 400);
+    if (!newPassword) {
+      return sendError(res, "Vui lòng nhập newPassword", 400);
     }
 
     if (confirmPassword !== undefined && newPassword !== confirmPassword) {
@@ -41,23 +41,27 @@ module.exports = async (req, res) => {
       return sendError(res, "User không tồn tại", 404);
     }
 
-    // Check if user has password (not social login)
-    if (!userWithPassword.password) {
-      return sendError(
-        res,
-        "Tài khoản Google/Facebook chưa có mật khẩu. Hãy tạo mật khẩu trước.",
-        400
+    // If user has a password, verify the current password before changing
+    if (userWithPassword.password) {
+      // User has existing password - must verify current password
+      if (!currentPassword) {
+        return sendError(res, "Vui lòng nhập currentPassword để xác minh", 400);
+      }
+      
+      // Verify current password
+      const isPasswordCorrect = await userWithPassword.correctPassword(
+        currentPassword,
+        userWithPassword.password
       );
-    }
 
-    // Verify current password
-    const isPasswordCorrect = await userWithPassword.correctPassword(
-      currentPassword,
-      userWithPassword.password
-    );
-
-    if (!isPasswordCorrect) {
-      return sendError(res, "Mật khẩu hiện tại không đúng", 401);
+      if (!isPasswordCorrect) {
+        return sendError(res, "Mật khẩu hiện tại không đúng", 401);
+      }
+    } else {
+      // User doesn't have a password yet (social account or password reset)
+      // In this case, they're setting a password for the first time
+      // No need to verify current password
+      console.log("User setting password for first time");
     }
 
     // Update password
