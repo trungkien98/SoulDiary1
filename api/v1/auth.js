@@ -403,7 +403,7 @@ module.exports = async (req, res) => {
         
         console.log(`✅ User found: ${user._id}`);
         
-        const otp = await otpService.generateOTP("forgot_password", user._id);
+        const otp = await otpService.generateOTP("forgotPassword", user._id);
         console.log(`✅ OTP generated: ${otp._id}`);
         
         await new Email(user, otp).sendPasswordReset();
