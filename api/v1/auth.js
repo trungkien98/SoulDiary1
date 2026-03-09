@@ -338,11 +338,13 @@ module.exports = async (req, res) => {
 
     // LOGOUT
     if (action === "logout") {
+      console.log(`👋 Logout request received`);
       res.setHeader(
         "Set-Cookie",
         "refreshToken=; HttpOnly; Secure; SameSite=Strict; Path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC"
       );
-      return sendSuccess(res, {}, 200, "Logged out successfully");
+      console.log(`✅ User logged out - refresh token cleared`);
+      return sendSuccess(res, {}, 200, "You have been logged out successfully.");
     }
 
     // REFRESH TOKEN
@@ -390,9 +392,13 @@ module.exports = async (req, res) => {
       return sendSuccess(res, { email: user.email }, 200, "OTP sent to your email");
     }
 
-    return sendError(res, "Invalid auth action", 400);
+    console.log(`⚠️ Invalid or unknown auth action: ${action}`);
+    return sendError(res, "Invalid authentication action. Please check your request.", 400);
   } catch (error) {
-    console.error("Auth error:", error);
-    return sendError(res, error.message || "Internal server error", 500);
+    console.error(`❌ Auth handler error:`, {
+      action,
+      message: error.message
+    });
+    return sendError(res, "An authentication error occurred. Please try again.", 500);
   }
 };

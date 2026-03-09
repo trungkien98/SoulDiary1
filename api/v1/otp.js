@@ -16,7 +16,8 @@ module.exports = async (req, res) => {
   if (req.method === "OPTIONS") return;
 
   if (req.method !== "POST") {
-    return sendError(res, "Method not allowed", 405);
+    console.log(`⚠️ Invalid HTTP method for OTP: ${req.method}`);
+    return sendError(res, "Invalid request method. Only POST is allowed.", 405);
   }
 
   try {
@@ -128,7 +129,10 @@ module.exports = async (req, res) => {
 
     return sendSuccess(res, {}, 200, "OTP verified successfully");
   } catch (error) {
-    console.error("OTP error:", error);
-    return sendError(res, error.message || "OTP operation failed", 500);
+    console.error(`❌ OTP handler error:`, {
+      action: req.query.action,
+      message: error.message
+    });
+    return sendError(res, "An error occurred during verification. Please try again.", 500);
   }
 };

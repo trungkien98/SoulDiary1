@@ -13,6 +13,7 @@ module.exports = async (req, res) => {
 
   // Root endpoint
   if (req.url === "/" || req.url === "") {
+    console.log(`🌟 API root endpoint accessed`);
     return sendSuccess(
       res,
       {
@@ -28,11 +29,12 @@ module.exports = async (req, res) => {
         },
       },
       200,
-      "🎉 Soul Diary API is running!"
+      "Welcome to Soul Diary API!"
     );
   }
 
   // For any other unmatched route
-  return sendError(res, "Route not found", 404);
+  console.log(`⚠️ Route not found: ${req.url}`);
+  return sendError(res, "The requested endpoint does not exist. Please check your request URL.", 404);
 };
 

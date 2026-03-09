@@ -11,6 +11,8 @@ module.exports = async (req, res) => {
   handleCORS(req, res);
   if (req.method === "OPTIONS") return;
 
+  console.log(`🎫 Health check request - timestamp: ${new Date().toISOString()}`);
+
   return sendSuccess(
     res,
     {
@@ -19,6 +21,6 @@ module.exports = async (req, res) => {
       version: "1.0.0",
     },
     200,
-    "Soul Diary API is running"
+    "Soul Diary API is running and operational."
   );
 };
