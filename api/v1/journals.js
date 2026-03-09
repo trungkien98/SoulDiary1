@@ -62,12 +62,16 @@ module.exports = async (req, res) => {
         // Get all journals with pagination
         // Handle soft delete filtering based on includeDeleted parameter
         const includeDeleted = req.query.includeDeleted === 'true';
-        const filter = { user: user._id, isDeleted: includeDeleted ? true : false };
+        const baseFilter = { user: user._id, isDeleted: includeDeleted };
         
-        let query = Journal.find(filter);
-        const features = new APIFeatures(query, req.query).filter().sort().paginate();
+        // Create query with base filter
+        let query = Journal.find(baseFilter);
+        
+        // Apply additional filters from query params (excluding includeDeleted to avoid override)
+        const { includeDeleted: _, ...queryWithoutDelete } = req.query;
+        const features = new APIFeatures(query, queryWithoutDelete).filter().sort().paginate();
         const journals = await features.query;
-        const totalResults = await Journal.countDocuments(filter);
+        const totalResults = await Journal.countDocuments(baseFilter);
 
         return sendSuccess(
           res,
