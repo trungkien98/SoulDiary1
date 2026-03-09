@@ -9,7 +9,7 @@ const clearOTP = async (type, userId) => {
 
 const generateOTP = async (type, userId) => {
   await clearOTP(type, userId);
-  const otp = "OTP" + Math.floor(1000 + Math.random() * 9000).toString();
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
   const expired = Date.now() + 10 * 60 * 1000;
   const otpData = await Otp.create({
     code: otp,
