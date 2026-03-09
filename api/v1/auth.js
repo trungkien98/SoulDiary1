@@ -37,12 +37,17 @@ module.exports = async (req, res) => {
     try {
       await connectDB();
 
+      // Helper: Get correct protocol (handles Vercel proxy headers)
+      const getProtocol = (req) => {
+        return req.headers['x-forwarded-proto'] || (req.secure ? 'https' : 'http');
+      };
+
       // GOOGLE OAUTH - Step 1: Redirect to Google consent
       if (action === "google-oauth") {
         const { redirect } = req.query;
         if (!redirect) return sendError(res, "Missing redirect parameter", 400);
 
-        const protocol = req.secure ? "https" : "http";
+        const protocol = getProtocol(req);
         const host = req.headers.host;
         const backendCallbackUri = `${protocol}://${host}/api/v1/auth?action=google-oauth-callback`;
 
@@ -66,7 +71,10 @@ module.exports = async (req, res) => {
           return res.redirect(`${redirectUri}?error=${errorMsg}`);
         }
 
-        const { idToken, payload } = await socialService.exchangeGoogleCode(code, `${req.protocol}://${req.headers.host}/api/v1/auth?action=google-oauth-callback`);
+        const protocol = getProtocol(req);
+        const host = req.headers.host;
+        const callbackUri = `${protocol}://${host}/api/v1/auth?action=google-oauth-callback`;
+        const { idToken, payload } = await socialService.exchangeGoogleCode(code, callbackUri);
 
         let user = await authService.findUser(payload.email);
         if (!user) {
@@ -92,7 +100,7 @@ module.exports = async (req, res) => {
         const { redirect } = req.query;
         if (!redirect) return sendError(res, "Missing redirect parameter", 400);
 
-        const protocol = req.secure ? "https" : "http";
+        const protocol = getProtocol(req);
         const host = req.headers.host;
         const backendCallbackUri = `${protocol}://${host}/api/v1/auth?action=facebook-oauth-callback`;
 
@@ -116,7 +124,10 @@ module.exports = async (req, res) => {
           return res.redirect(`${redirectUri}?error=${errorMsg}`);
         }
 
-        const { accessToken, payload } = await socialService.exchangeFacebookCode(code, `${req.protocol}://${req.headers.host}/api/v1/auth?action=facebook-oauth-callback`);
+        const protocol = getProtocol(req);
+        const host = req.headers.host;
+        const callbackUri = `${protocol}://${host}/api/v1/auth?action=facebook-oauth-callback`;
+        const { accessToken, payload } = await socialService.exchangeFacebookCode(code, callbackUri);
 
         let user = await authService.findUser(payload.email);
         if (!user) {
