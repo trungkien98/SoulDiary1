@@ -10,6 +10,7 @@ const { APIFeatures } = require("../../utils/apiFeature");
  * Consolidated Journal Handler
  * GET/POST /api/v1/journals (list and create)
  * GET/PUT/DELETE /api/v1/journals?id=xxx (detail operations)
+ * PATCH /api/v1/journals/:id/restore (restore soft-deleted entry)
  */
 module.exports = async (req, res) => {
   handleCORS(req, res);
@@ -19,6 +20,30 @@ module.exports = async (req, res) => {
     await connectDB();
     const user = await protect(req);
     const { id } = req.query;
+
+    // Check for restore endpoint: /journals/:id/restore
+    // In Vercel, req.url will be the path after /api/v1/journals
+    const restoreMatch = req.url?.match(/^\/([a-f0-9]{24})\/restore/i) || req.url?.match(/\/([a-f0-9]{24})\/restore/i);
+    if (restoreMatch && req.method === "PATCH") {
+      const journalId = restoreMatch[1];
+      try {
+        const journal = await Journal.findOne({
+          _id: journalId,
+          user: user._id,
+          isDeleted: true,
+        });
+        if (!journal) return sendError(res, "Journal not found or already active", 404);
+        
+        journal.isDeleted = false;
+        journal.deletedAt = null;
+        await journal.save();
+        
+        return sendSuccess(res, { journal }, 200, "Journal restored successfully");
+      } catch (error) {
+        console.error("Restore journal error:", error);
+        return sendError(res, error.message || "Failed to restore journal", 500);
+      }
+    }
 
     // GET - Fetch journals (LIST or SINGLE)
     if (req.method === "GET") {
