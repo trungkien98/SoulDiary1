@@ -17,11 +17,123 @@ module.exports = async (req, res) => {
   handleCORS(req, res);
   if (req.method === "OPTIONS") return;
 
+  const { action } = req.query;
+
+  // ====== HANDLE GET REQUESTS FOR OAUTH ======
+  if (req.method === "GET") {
+    try {
+      await connectDB();
+
+      // GOOGLE OAUTH - Step 1: Redirect to Google consent
+      if (action === "google-oauth") {
+        const { redirect } = req.query;
+        if (!redirect) return sendError(res, "Missing redirect parameter", 400);
+
+        const protocol = req.secure ? "https" : "http";
+        const host = req.headers.host;
+        const backendCallbackUri = `${protocol}://${host}/api/v1/auth?action=google-oauth-callback`;
+
+        const { authUrl } = socialService.generateGoogleConsentUrl(backendCallbackUri, redirect);
+        return res.redirect(authUrl);
+      }
+
+      // GOOGLE OAUTH CALLBACK - Step 2: Handle code exchange
+      if (action === "google-oauth-callback") {
+        const { code, state, error } = req.query;
+
+        const stateData = socialService.getOAuthState(state);
+        if (!stateData) {
+          return sendError(res, "Invalid or expired OAuth state. Please try again.", 400);
+        }
+
+        const redirectUri = stateData.appRedirectUri;
+
+        if (error) {
+          const errorMsg = encodeURIComponent(`Google OAuth error: ${error}`);
+          return res.redirect(`${redirectUri}?error=${errorMsg}`);
+        }
+
+        const { idToken, payload } = await socialService.exchangeGoogleCode(code, `${req.protocol}://${req.headers.host}/api/v1/auth?action=google-oauth-callback`);
+
+        let user = await authService.findUser(payload.email);
+        if (!user) {
+          user = await User.create({
+            email: payload.email,
+            name: payload.name,
+            photo: payload.picture,
+            isVerified: true,
+            provider: "google",
+          });
+        }
+
+        const tokens = tokenService.signTokens(user);
+        await User.findByIdAndUpdate(user._id, { refreshToken: tokens.refresh_token });
+
+        const appRedirect = redirectUri || "souldiary://oauth-callback";
+        const tokenParam = encodeURIComponent(tokens.access_token);
+        return res.redirect(`${appRedirect}?token=${tokenParam}&provider=google`);
+      }
+
+      // FACEBOOK OAUTH - Step 1: Redirect to Facebook consent
+      if (action === "facebook-oauth") {
+        const { redirect } = req.query;
+        if (!redirect) return sendError(res, "Missing redirect parameter", 400);
+
+        const protocol = req.secure ? "https" : "http";
+        const host = req.headers.host;
+        const backendCallbackUri = `${protocol}://${host}/api/v1/auth?action=facebook-oauth-callback`;
+
+        const { authUrl } = socialService.generateFacebookConsentUrl(backendCallbackUri, redirect);
+        return res.redirect(authUrl);
+      }
+
+      // FACEBOOK OAUTH CALLBACK - Step 2: Handle code exchange
+      if (action === "facebook-oauth-callback") {
+        const { code, state, error } = req.query;
+
+        const stateData = socialService.getOAuthState(state);
+        if (!stateData) {
+          return sendError(res, "Invalid or expired OAuth state. Please try again.", 400);
+        }
+
+        const redirectUri = stateData.appRedirectUri;
+
+        if (error) {
+          const errorMsg = encodeURIComponent(`Facebook OAuth error: ${error}`);
+          return res.redirect(`${redirectUri}?error=${errorMsg}`);
+        }
+
+        const { accessToken, payload } = await socialService.exchangeFacebookCode(code, `${req.protocol}://${req.headers.host}/api/v1/auth?action=facebook-oauth-callback`);
+
+        let user = await authService.findUser(payload.email);
+        if (!user) {
+          user = await User.create({
+            email: payload.email,
+            name: payload.name,
+            photo: payload.picture?.data?.url,
+            isVerified: true,
+            provider: "facebook",
+          });
+        }
+
+        const tokens = tokenService.signTokens(user);
+        await User.findByIdAndUpdate(user._id, { refreshToken: tokens.refresh_token });
+
+        const appRedirect = redirectUri || "souldiary://oauth-callback";
+        const tokenParam = encodeURIComponent(tokens.access_token);
+        return res.redirect(`${appRedirect}?token=${tokenParam}&provider=facebook`);
+      }
+
+      return sendError(res, "Method not allowed for this action", 405);
+    } catch (error) {
+      console.error("❌ OAuth GET error:", error);
+      return sendError(res, error.message || "Internal server error", 500);
+    }
+  }
+
   if (req.method !== "POST") {
     return sendError(res, "Method not allowed", 405);
   }
-
-  const { action } = req.query;
 
   try {
     await connectDB();
