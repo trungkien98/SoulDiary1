@@ -62,6 +62,7 @@ exports.generateGoogleConsentUrl = (backendCallbackUri, appRedirectUri) => {
     access_type: 'offline',
     scope: ['profile', 'email'],
     state,
+    prompt: 'select_account', // Force account selection dialog
   });
 
   return { authUrl, state };
@@ -101,6 +102,7 @@ exports.generateFacebookConsentUrl = (backendCallbackUri, appRedirectUri) => {
     redirect_uri: backendCallbackUri,
     scope: 'public_profile,email',
     state,
+    auth_type: 'reauthenticate', // Force account selection dialog
   });
 
   return {
